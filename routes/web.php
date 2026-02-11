@@ -34,13 +34,16 @@ Route::middleware(['auth', 'verified', 'throttle:app'])->group(function () {
 
     // Standup
     Route::livewire('standup', 'standup.standup-board')->name('standups');
-    Route::livewire('standup/create', 'standup.standup-form')->name('standup.create');
+    Route::middleware('throttle:standup-submit')->group(function () {
+        Route::livewire('standup/create', 'standup.standup-form')->name('standup.create');
+    });
     Route::livewire('standup/{standup}/edit', 'standup.standup-form')->name('standup.edit');
 
     // Calendar
     Route::livewire('calendar', 'calendar.calendar-view')->name('calendar');
 
     // Tasks
+    // Task create/update POST actions are Livewire requests and continue to pass through the main throttle:app middleware.
     Route::livewire('tasks', 'task.task-board')->name('tasks');
 
     // Training & Goals

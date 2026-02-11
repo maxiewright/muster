@@ -136,7 +136,7 @@ new class extends Component
     #[Computed]
     public function tasks()
     {
-        $query = Task::with(['assignee', 'creator'])
+        $query = Task::with(['assignee', 'creator', 'subtasks'])
             ->withCount([
                 'subtasks',
                 'subtasks as subtasks_completed_count' => function ($query) {
@@ -176,7 +176,7 @@ new class extends Component
     #[Computed]
     public function myTasks()
     {
-        return Task::with(['assignee', 'creator'])
+        return Task::with(['assignee', 'creator', 'subtasks'])
             ->withCount(['subtasks', 'standups'])
             /** @var \App\Models\User $user */
             ->where('assigned_to', auth()->id())

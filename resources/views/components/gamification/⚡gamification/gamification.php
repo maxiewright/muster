@@ -12,7 +12,7 @@ new class extends Component
     #[Computed]
     public function user(): User
     {
-        return auth()->user()->load(['badges', 'pointLogs']);
+        return auth()->user()->load(['badges', 'pointLogs.user']);
     }
 
     #[Computed]
@@ -25,6 +25,7 @@ new class extends Component
     public function recentPointLogs()
     {
         return $this->user->pointLogs()
+            ->with('user')
             ->orderByDesc('created_at')
             ->limit(15)
             ->get();

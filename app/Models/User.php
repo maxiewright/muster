@@ -4,17 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\Role;
 use App\Enums\PartnerStatus;
+use App\Enums\Role;
 use App\Enums\TrainingGoalStatus;
-use App\Models\Badge;
-use App\Models\Event;
-use App\Models\PartnerNotification;
-use App\Models\PointLog;
-use App\Models\Standup;
-use App\Models\TrainingCheckin;
-use App\Models\TrainingGoal;
-use App\Models\UserCheckin;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +28,8 @@ class User extends Authenticatable implements HasMedia
         'name',
         'email',
         'password',
+        'oauth_provider',
+        'oauth_id',
         'role',
         'points',
         'current_streak',
@@ -211,6 +205,11 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->belongsToMany(Badge::class)
             ->withPivot('earned_at');
+    }
+
+    public function sentInvitations(): HasMany
+    {
+        return $this->hasMany(TeamInvitation::class, 'invited_by_user_id');
     }
 
     public function awardPoints(int $points, string $reason, string $type, ?Model $related = null): void

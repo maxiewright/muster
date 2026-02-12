@@ -1,15 +1,37 @@
 <?php
 
+use App\Enums\Role;
+use App\Http\Controllers\OnboardingSetupController;
+use App\Http\Controllers\TeamInvitationController;
 use App\Http\SocialiteController;
+use App\Models\User;
 use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function (): Factory|\Illuminate\Contracts\View\View {
+Route::get('/', function (): Factory|View|RedirectResponse {
+    if (! User::query()->where('role', Role::Lead->value)->exists()) {
+        return redirect()->route('setup');
+    }
+
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+
     return view('welcome');
 })->name('home');
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('/setup', [OnboardingSetupController::class, 'create'])->name('setup');
+    Route::post('/setup', [OnboardingSetupController::class, 'store'])->name('setup.store');
+    Route::get('/invites/{invitation:token}', [TeamInvitationController::class, 'showAcceptForm'])->name('invites.accept');
+    Route::post('/invites/{invitation:token}', [TeamInvitationController::class, 'accept'])->name('invites.accept.store');
+});
 
 Route::get('/health', function (): JsonResponse {
     $checks = ['database' => false, 'cache' => false];
@@ -30,6 +52,8 @@ Route::get('/health', function (): JsonResponse {
 
 Route::middleware(['auth', 'verified', 'throttle:app'])->group(function () {
     Route::livewire('dashboard', 'dashboard')->name('dashboard');
+    Route::get('team/invitations', [TeamInvitationController::class, 'index'])->name('team.invitations');
+    Route::post('team/invitations', [TeamInvitationController::class, 'store'])->name('team.invitations.store');
     Route::livewire('achievements', 'gamification.gamification')->name('gamification');
 
     // Standup

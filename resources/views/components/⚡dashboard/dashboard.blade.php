@@ -1,42 +1,120 @@
 <div class="space-y-6">
-    {{-- Header: mobile-first stack, then row --}}
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <flux:heading size="xl" level="1">Muster Board</flux:heading>
-            <flux:subheading>{{ now()->format('l, F j, Y') }}</flux:subheading>
-        </div>
-        <div class="flex items-center gap-2 min-h-[44px]">
-            <flux:badge color="green" size="sm" icon="circle-check">
-                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse mr-1.5"></span>
-                {{ $todaysStandups->count() }} checked in
-            </flux:badge>
-        </div>
-    </div>
+    <flux:card class="relative overflow-hidden border-zinc-200/70 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 text-zinc-100 dark:border-zinc-700">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.28),transparent_45%)]"></div>
+        <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(245,158,11,0.12)_38%,transparent_76%)]"></div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Main Content: Standups (today-focused; task check-off is in the standup flow) --}}
-        <div class="lg:col-span-2 space-y-4">
-            {{-- My Standup --}}
-            @if(!$myStandup)
-                <flux:card class="!bg-amber-50 dark:!bg-amber-900/20 !border-amber-200 dark:!border-amber-800">
-                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl" aria-hidden="true">📋</span>
-                            <div>
-                                <flux:heading level="3" class="!text-amber-800 dark:!text-amber-200">You haven't checked in today</flux:heading>
-                                <flux:text class="!text-amber-600 dark:!text-amber-400">Share what you're working on with the team</flux:text>
+        <div class="relative grid gap-6 lg:grid-cols-3">
+            <div class="space-y-3 lg:col-span-2">
+                <flux:badge color="emerald" size="sm" icon="shield-check">Operational</flux:badge>
+                <flux:heading size="xl" level="1" class="!text-zinc-50">Mission Control</flux:heading>
+                <flux:text class="max-w-2xl !text-zinc-300">
+                    Coordinate your squad, clear blockers fast, and stack points with consistent execution.
+                    {{ now()->format('l, F j, Y') }}
+                </flux:text>
+
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div class="rounded-xl border border-zinc-700 bg-zinc-900/70 p-3">
+                        <flux:text size="xs" class="!text-zinc-400">Streak</flux:text>
+                        <flux:heading level="2" size="xl" class="!text-amber-300">{{ auth()->user()->current_streak ?? 0 }} days</flux:heading>
+                    </div>
+                    <div class="rounded-xl border border-zinc-700 bg-zinc-900/70 p-3">
+                        <flux:text size="xs" class="!text-zinc-400">Points</flux:text>
+                        <flux:heading level="2" size="xl" class="!text-emerald-300">{{ number_format(auth()->user()->points ?? 0) }}</flux:heading>
+                    </div>
+                    <div class="rounded-xl border border-zinc-700 bg-zinc-900/70 p-3">
+                        <flux:text size="xs" class="!text-zinc-400">Today</flux:text>
+                        <flux:heading level="2" size="xl" class="!text-sky-300">{{ $todaysStandups->count() }} check-ins</flux:heading>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                <flux:button href="{{ $myStandup ? route('standup.edit', $myStandup) : route('standup.create') }}" variant="primary" class="w-full min-h-[44px] !bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600" wire:navigate>
+                    {{ $myStandup ? 'Update Check-In' : 'Check In' }}
+                </flux:button>
+                <flux:button href="{{ route('tasks') }}" variant="primary" class="w-full min-h-[44px] !bg-sky-600 hover:!bg-sky-700 !border-sky-600 !text-white" wire:navigate>
+                    Open Task Board
+                </flux:button>
+                <flux:button href="{{ route('training.dashboard') }}" variant="primary" class="w-full min-h-[44px] !bg-amber-600 hover:!bg-amber-700 !border-amber-600 !text-white" wire:navigate>
+                    Training Ops
+                </flux:button>
+            </div>
+        </div>
+    </flux:card>
+
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <flux:card class="p-0 overflow-hidden">
+            <div class="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/50">
+                <flux:heading level="2" size="lg" class="flex items-center gap-2">
+                    <flux:icon.bell class="size-4" />
+                    Notifications
+                </flux:heading>
+                <flux:badge color="amber" size="sm">{{ $recentPartnerNotifications->whereNull('read_at')->count() }} unread</flux:badge>
+            </div>
+
+            <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                @forelse($recentPartnerNotifications as $notification)
+                    <div class="p-4">
+                        <div class="flex items-start gap-3">
+                            <flux:avatar :name="$notification->fromUser?->name ?? 'System'" variant="solid" />
+                            <div class="min-w-0 flex-1">
+                                <div class="mb-1 flex items-center gap-2">
+                                    <flux:heading level="3" class="truncate">{{ $notification->title }}</flux:heading>
+                                    @if(!$notification->read_at)
+                                        <span class="inline-block size-2 rounded-full bg-amber-500"></span>
+                                    @endif
+                                </div>
+                                <flux:text size="sm" class="!text-zinc-600 dark:!text-zinc-300">
+                                    {{ $notification->message ?: 'New mission update from your accountability squad.' }}
+                                </flux:text>
+                                <flux:text size="xs" class="mt-1 !text-zinc-500">
+                                    {{ $notification->fromUser?->name ?? 'System' }} · {{ $notification->created_at->diffForHumans() }}
+                                </flux:text>
                             </div>
                         </div>
-                        <flux:button href="{{ route('standup.create') }}" variant="primary" class="!bg-amber-600 hover:!bg-amber-700 !border-amber-600 min-h-[44px] min-w-[44px] shrink-0" wire:navigate>
-                            Check In
-                        </flux:button>
                     </div>
-                </flux:card>
-            @endif
+                @empty
+                    <div class="p-6 text-center">
+                        <flux:text variant="subtle">No notifications yet. Your next squad update will appear here.</flux:text>
+                    </div>
+                @endforelse
+            </div>
+        </flux:card>
 
-            {{-- Team Standups --}}
+        <flux:card class="p-0 overflow-hidden">
+            <div class="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/50">
+                <flux:heading level="2" size="lg" class="flex items-center gap-2">
+                    <flux:icon.messages-square class="size-4" />
+                    Team Updates
+                </flux:heading>
+                <flux:link href="{{ route('standups') }}" wire:navigate>View all</flux:link>
+            </div>
+
+            <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                @forelse($teamUpdates as $update)
+                    <div class="p-4">
+                        <div class="mb-2 flex items-center gap-2">
+                            <flux:avatar :name="$update->user->name" variant="solid" />
+                            <flux:heading level="3">{{ $update->user->name }}</flux:heading>
+                            <flux:text size="xs" class="!text-zinc-500">{{ $update->created_at->diffForHumans() }}</flux:text>
+                        </div>
+                        <flux:text size="sm" class="!text-zinc-600 dark:!text-zinc-300">
+                            {{ $update->blockers ? 'Blocker: '.$update->blockers : 'Status posted with '.$update->standupTasks->count().' linked tasks.' }}
+                        </flux:text>
+                    </div>
+                @empty
+                    <div class="p-6 text-center">
+                        <flux:text variant="subtle">No team updates yet today.</flux:text>
+                    </div>
+                @endforelse
+            </div>
+        </flux:card>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-4 lg:col-span-2">
             <flux:card class="p-0 overflow-hidden">
-                <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50">
+                <div class="border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/50">
                     <flux:heading level="2" size="lg">Today's Muster</flux:heading>
                 </div>
 
@@ -45,12 +123,12 @@
                         <div class="p-4">
                             <div class="flex items-start gap-3">
                                 <flux:avatar :name="$standup->user->name" variant="solid" />
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 mb-2">
+                                <div class="min-w-0 flex-1">
+                                    <div class="mb-2 flex items-center gap-2">
                                         <flux:heading level="3">{{ $standup->user->name }}</flux:heading>
                                         @if($standup->mood)
                                             <flux:tooltip :content="$standup->mood->label()">
-                                                <span class="text-lg cursor-help">{{ $standup->mood->emoji() }}</span>
+                                                <span class="cursor-help text-lg">{{ $standup->mood->emoji() }}</span>
                                             </flux:tooltip>
                                         @endif
                                         <flux:text class="text-xs">{{ $standup->created_at->format('H:i') }}</flux:text>
@@ -92,7 +170,7 @@
 
                                             @if($blocked->isNotEmpty())
                                                 <div class="flex items-start gap-1">
-                                                    <span class="text-red-500">⚠️</span>
+                                                    <span class="text-red-500">!</span>
                                                     <flux:text class="!text-red-600 dark:!text-red-400">
                                                         {{ $blocked->take(3)->map(fn($s) => optional($s->task)->title)->filter()->implode(', ') }}
                                                         @if($blocked->count() > 3)
@@ -103,48 +181,43 @@
                                             @endif
 
                                             @if($completed->isEmpty() && $planned->isEmpty() && $blocked->isEmpty())
-                                                <div>
-                                                    <flux:text variant="subtle" class="italic">No tasks linked to this standup.</flux:text>
-                                                </div>
+                                                <flux:text variant="subtle" class="italic">No tasks linked to this standup.</flux:text>
                                             @endif
                                         </div>
                                     @endif
 
                                     @if($standup->blockers)
-                                            <div class="flex items-start gap-1">
-                                                <span class="text-red-500">⚠️</span>
-                                                <flux:text class="!text-red-600 dark:!text-red-400">{{ $standup->blockers }}</flux:text>
-                                            </div>
-                                        @endif
-                                    </div>
+                                        <div class="mt-2 flex items-start gap-1">
+                                            <span class="text-red-500">!</span>
+                                            <flux:text class="!text-red-600 dark:!text-red-400">{{ $standup->blockers }}</flux:text>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     @empty
                         <div class="p-8 text-center">
-                            <span class="text-4xl mb-2 block">🏕️</span>
                             <flux:heading level="3">No one has checked in yet today.</flux:heading>
-                            <flux:text>Be the first!</flux:text>
+                            <flux:text>Be first to post the daily update.</flux:text>
                         </div>
                     @endforelse
                 </div>
             </flux:card>
         </div>
 
-        {{-- Sidebar: Upcoming Events --}}
         <div class="space-y-4">
             <flux:card class="p-0 overflow-hidden">
-                <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50">
+                <div class="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900/50">
                     <flux:heading level="2" size="lg">Upcoming Huddles</flux:heading>
-                    <flux:link href="{{ route('calendar') }}" wire:navigate>View All →</flux:link>
+                    <flux:link href="{{ route('calendar') }}" wire:navigate>View all</flux:link>
                 </div>
 
                 <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
                     @forelse($upcomingEvents as $event)
                         <div class="p-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-1 h-10 rounded-full" style="background-color: {{ $event->typeColor }}"></div>
-                                <div class="flex-1 min-w-0">
+                                <div class="h-10 w-1 rounded-full" style="background-color: {{ $event->typeColor }}"></div>
+                                <div class="min-w-0 flex-1">
                                     <flux:heading level="4" class="truncate">{{ $event->title }}</flux:heading>
                                     <flux:text size="sm">{{ $event->starts_at->format('D, M j') }} at {{ $event->starts_at->format('H:i') }}</flux:text>
                                 </div>
@@ -158,61 +231,15 @@
                 </div>
             </flux:card>
 
-            {{-- My Progress (Gamification) --}}
-            <flux:card class="overflow-hidden">
-                <a href="{{ route('gamification') }}" wire:navigate class="block">
-                    <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-amber-500/10 to-orange-600/10 dark:from-amber-500/20 dark:to-orange-600/20">
-                        <flux:heading level="3" class="flex items-center gap-2">
-                            <span>🎯</span> My Progress
-                        </flux:heading>
-                    </div>
-                    <div class="p-4">
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xl">🔥</span>
-                                <div>
-                                    <p class="text-xl font-bold text-amber-600 dark:text-amber-400">{{ auth()->user()->current_streak ?? 0 }}</p>
-                                    <flux:text size="xs" variant="subtle">day streak</flux:text>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xl">⭐</span>
-                                <div>
-                                    <p class="text-xl font-bold text-amber-600 dark:text-amber-400">{{ number_format(auth()->user()->points ?? 0) }}</p>
-                                    <flux:text size="xs" variant="subtle">points</flux:text>
-                                </div>
-                            </div>
-                        </div>
-                        @php $badges = auth()->user()->badges()->latest('badge_user.earned_at')->limit(3)->get(); @endphp
-                        @if($badges->isNotEmpty())
-                            <div class="flex items-center gap-1 pt-2 border-t border-zinc-200 dark:border-zinc-700">
-                                <flux:text size="xs" variant="subtle" class="mr-2">Recent badges:</flux:text>
-                                @foreach($badges as $badge)
-                                    <flux:tooltip :content="$badge->name">
-                                        <span class="text-lg">{{ $badge->icon }}</span>
-                                    </flux:tooltip>
-                                @endforeach
-                            </div>
-                        @endif
-                        <flux:text size="xs" variant="subtle" class="mt-2 block text-amber-600 dark:text-amber-400">View achievements →</flux:text>
-                    </div>
-                </a>
-            </flux:card>
-
-            {{-- Quick Stats --}}
             <flux:card>
                 <flux:heading level="3" class="mb-3">This Week</flux:heading>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {{ \App\Models\Standup::where('date', '>=', now()->startOfWeek())->count() }}
-                        </p>
+                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $weeklyStandupsCount }}</p>
                         <flux:text size="xs">Check-ins</flux:text>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">
-                            {{ \App\Models\Event::where('starts_at', '>=', now()->startOfWeek())->where('starts_at', '<=', now()->endOfWeek())->count() }}
-                        </p>
+                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $weeklyEventsCount }}</p>
                         <flux:text size="xs">Huddles</flux:text>
                     </div>
                 </div>

@@ -1,21 +1,19 @@
 <?php
 
-test('registration screen can be rendered', function (): void {
-    $response = $this->get(route('register'));
+test('registration screen is unavailable in invite-only mode', function (): void {
+    $response = $this->get('/register');
 
-    $response->assertOk();
+    $response->assertNotFound();
 });
 
-test('new users can register', function (): void {
-    $response = $this->post(route('register.store'), [
+test('registration endpoint is unavailable in invite-only mode', function (): void {
+    $response = $this->post('/register', [
         'name' => 'John Doe',
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);
 
-    $response->assertSessionHasNoErrors()
-        ->assertRedirect(route('dashboard', absolute: false));
-
-    $this->assertAuthenticated();
+    $response->assertNotFound();
+    $this->assertGuest();
 });

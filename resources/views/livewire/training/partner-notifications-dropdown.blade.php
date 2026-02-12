@@ -15,13 +15,18 @@
 
         <div class="max-h-96 overflow-y-auto">
             @forelse($this->notifications as $notification)
-                <flux:menu.item 
+                @php
+                    $targetUrl = $notification->goal
+                        ? route('training.goals.show', $notification->goal->slug)
+                        : route('training.dashboard');
+                @endphp
+                <flux:menu.item
                     class="p-4 border-b border-zinc-50 dark:border-zinc-900 last:border-0 !block"
                     wire:click="markAsRead({{ $notification->id }})"
-                    href="{{ route('training.goals.show', $notification->goal->slug) }}"
+                    href="{{ $targetUrl }}"
                 >
                     <div class="flex gap-3">
-                        <img src="{{ $notification->fromUser->profileImageUrl('thumb') }}" class="size-8 rounded-full flex-shrink-0" alt="">
+                        <img src="{{ $notification->fromUser?->profileImageUrl('thumb') ?? auth()->user()->profileImageUrl('thumb') }}" class="size-8 rounded-full flex-shrink-0" alt="">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start">
                                 <span class="font-bold text-xs truncate">{{ $notification->title }}</span>

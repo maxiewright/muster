@@ -252,13 +252,10 @@
                             <h3 class="text-sm font-medium text-gray-700 dark:text-zinc-300 mb-3">
                                 Today's Tasks ({{ count($plannedTaskIds) }})
                             </h3>
-                            <div class="space-y-2"
-                                 wire:sort.ghost="sortPlannedTasks">
+                            <div class="space-y-2">
                                 @foreach($this->selectedPlannedTasks as $task)
                                     @php $isBlocked = in_array($task->id, $blockedTaskIds); @endphp
                                     <div wire:key="planned-{{ $task->id }}"
-                                         wire:sort:item="{{ $task->id }}"
-                                         wire:sort:handle
                                          class="flex items-center justify-between p-3 rounded-lg border transition cursor-grab active:cursor-grabbing hover:shadow-sm hover:-translate-y-[1px]
                                              {{ $isBlocked ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20' : 'border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20' }}">
                                         <div class="flex items-center gap-3">
@@ -273,7 +270,6 @@
                                         <div class="flex items-center gap-2">
                                             <button wire:click="startTaskToOngoing({{ $task->id }})"
                                                     type="button"
-                                                    wire:sort:ignore
                                                     class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800/50 transition"
                                                     title="Start working on this task">
                                                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
@@ -281,14 +277,12 @@
                                             </button>
                                             <button wire:click="toggleBlocked({{ $task->id }})"
                                                     type="button"
-                                                    wire:sort:ignore
                                                     class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 transition"
                                                     title="{{ $isBlocked ? 'Remove blocker' : 'Mark as blocked' }}">
                                                 <span class="text-sm">{{ $isBlocked ? '🚧' : '⚠️' }}</span>
                                             </button>
                                             <button wire:click="removeFromPlanned({{ $task->id }})"
                                                     type="button"
-                                                    wire:sort:ignore
                                                     class="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-gray-200 dark:hover:bg-zinc-600 transition"
                                                     title="Remove from today">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

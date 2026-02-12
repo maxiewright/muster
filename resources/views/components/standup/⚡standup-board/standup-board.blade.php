@@ -7,9 +7,9 @@
             <flux:subheading>Review team check-ins and daily progress reports</flux:subheading>
         </div>
 
-        @if(!$this->myStandup && $selectedDate->isToday())
-            <flux:button variant="primary" icon="check" href="{{ route('standup.create') }}" wire:navigate>
-                Check In
+        @if($selectedDate->isToday())
+            <flux:button variant="primary" icon="check" href="{{ $this->myStandup ? route('standup.edit', $this->myStandup) : route('standup.create') }}" wire:navigate>
+                {{ $this->myStandup ? 'Edit Check-In' : 'Check In' }}
             </flux:button>
         @endif
     </div>

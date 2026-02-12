@@ -3,41 +3,37 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
-        <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
-            <div class="bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-e dark:border-neutral-800">
-                <div class="absolute inset-0 bg-neutral-900"></div>
-                <a href="{{ route('home') }}" class="relative z-20 flex items-center text-lg font-medium" wire:navigate>
-                    <span class="flex h-10 w-10 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="me-2 h-7 fill-current text-white" />
+    <body class="dark min-h-dvh bg-zinc-950 text-zinc-100 antialiased">
+        <div class="relative grid min-h-dvh lg:grid-cols-2">
+            <div class="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_15%_20%,rgba(16,185,129,0.22),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.18),transparent_33%),linear-gradient(180deg,#09090b_0%,#18181b_50%,#09090b_100%)]"></div>
+            <div class="absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:44px_44px]"></div>
+
+            <aside class="hidden border-r border-zinc-800/70 p-10 lg:flex lg:flex-col">
+                <a href="{{ route('home') }}" class="relative z-20 flex items-center gap-3 text-lg font-medium text-zinc-100" wire:navigate>
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/15 text-emerald-300">
+                        <x-app-logo-icon class="size-6 fill-current" />
                     </span>
-                    {{ config('app.name', 'Laravel') }}
+                    {{ config('app.name', 'Muster') }}
                 </a>
 
-                @php
-                    [$message, $author] = str(Illuminate\Foundation\Inspiring::quotes()->random())->explode('-');
-                @endphp
-
-                <div class="relative z-20 mt-auto">
-                    <blockquote class="space-y-2">
-                        <flux:heading size="lg">&ldquo;{{ trim($message) }}&rdquo;</flux:heading>
-                        <footer><flux:heading>{{ trim($author) }}</flux:heading></footer>
-                    </blockquote>
+                <div class="relative z-20 mt-auto max-w-md space-y-4">
+                    <p class="text-xs uppercase tracking-[0.2em] text-zinc-300">Mission Access</p>
+                    <flux:heading size="xl" class="!text-zinc-50">Invite-only operations for high-accountability teams.</flux:heading>
+                    <flux:text class="!text-zinc-200">Coordinate standups, training, and execution from one secure command center.</flux:text>
                 </div>
-            </div>
-            <div class="w-full lg:p-8">
-                <div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                    <a href="{{ route('home') }}" class="z-20 flex flex-col items-center gap-2 font-medium lg:hidden" wire:navigate>
-                        <span class="flex h-9 w-9 items-center justify-center rounded-md">
-                            <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
-                        </span>
+            </aside>
 
-                        <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
+            <main class="flex items-center justify-center px-6 py-10 lg:px-12">
+                <div class="w-full max-w-md rounded-2xl border border-zinc-600/90 bg-zinc-900/95 p-6 shadow-2xl backdrop-blur">
+                    <a href="{{ route('home') }}" class="mb-6 flex items-center justify-center gap-2 text-zinc-100 lg:hidden" wire:navigate>
+                        <x-app-logo-icon class="size-8 fill-current" />
+                        <span class="font-semibold">{{ config('app.name', 'Muster') }}</span>
                     </a>
                     {{ $slot }}
                 </div>
-            </div>
+            </main>
         </div>
+
         @fluxScripts
     </body>
 </html>

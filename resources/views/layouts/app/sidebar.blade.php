@@ -39,6 +39,14 @@
                         {{ __('Achievements') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if(auth()->user()->isLead())
+                    <flux:sidebar.group :heading="__('Team')" class="grid">
+                        <flux:sidebar.item icon="users" :href="route('team.invitations')" :current="request()->routeIs('team.invitations')" wire:navigate>
+                            {{ __('Invitations') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        @include('partials.head')
+    </head>
+    <body class="min-h-dvh bg-zinc-950 text-zinc-100 antialiased">
+        <div class="relative isolate flex min-h-dvh items-center justify-center overflow-hidden px-6 py-10">
+            <div class="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_15%_20%,rgba(16,185,129,0.28),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.2),transparent_35%),linear-gradient(180deg,#09090b_0%,#18181b_50%,#09090b_100%)]"></div>
+            <div class="absolute inset-0 -z-10 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:44px_44px]"></div>
+
+            <div class="w-full max-w-md rounded-2xl border border-zinc-700 bg-zinc-900/85 p-6 shadow-2xl backdrop-blur">
+                <flux:heading level="1" size="xl" class="!text-zinc-50">Accept Invitation</flux:heading>
+                <flux:text class="mt-2 !text-zinc-300">Join the team as {{ ucfirst($invitation->role) }} ({{ $invitation->email }}).</flux:text>
+
+                <form method="POST" action="{{ route('invites.accept.store', $invitation) }}" class="mt-6 space-y-4">
+                    @csrf
+
+                    <flux:field>
+                        <flux:label>Name</flux:label>
+                        <flux:input name="name" :value="old('name')" required autofocus autocomplete="name" />
+                        <flux:error name="name" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Password</flux:label>
+                        <flux:input name="password" type="password" required autocomplete="new-password" viewable />
+                        <flux:error name="password" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Confirm Password</flux:label>
+                        <flux:input name="password_confirmation" type="password" required autocomplete="new-password" viewable />
+                    </flux:field>
+
+                    <flux:button type="submit" variant="primary" class="w-full min-h-[44px] !bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600">
+                        Join Team
+                    </flux:button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

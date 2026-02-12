@@ -4,9 +4,14 @@ use App\Models\User;
 use Laravel\Fortify\Features;
 
 test('login screen can be rendered', function (): void {
+    config()->set('services.github.client_id', 'test-client-id');
+    config()->set('services.google.client_id', 'test-client-id');
+
     $response = $this->get(route('login'));
 
-    $response->assertOk();
+    $response->assertOk()
+        ->assertSee('Continue with GitHub')
+        ->assertSee('Continue with Google');
 });
 
 test('users can authenticate using the login screen', function (): void {

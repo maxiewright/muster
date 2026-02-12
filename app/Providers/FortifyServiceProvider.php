@@ -49,7 +49,6 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::verifyEmailView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.verify-email'));
         Fortify::twoFactorChallengeView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.two-factor-challenge'));
         Fortify::confirmPasswordView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.confirm-password'));
-        Fortify::registerView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.register'));
         Fortify::resetPasswordView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.reset-password'));
         Fortify::requestPasswordResetLinkView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.forgot-password'));
     }

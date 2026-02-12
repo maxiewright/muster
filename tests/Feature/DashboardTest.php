@@ -2,7 +2,9 @@
 
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\PartnerNotification;
 use App\Models\Standup;
+use App\Models\TrainingGoal;
 use App\Models\User;
 
 test('guests are redirected to the login page', function (): void {
@@ -120,4 +122,45 @@ test('dashboard limits upcoming events to 5', function (): void {
     expect(\App\Models\Event::where('starts_at', '>=', now())
         ->where('starts_at', '<=', now()->addDays(7))
         ->count())->toBe(7);
+});
+
+test('dashboard displays notifications and team updates from others', function (): void {
+    $user = User::factory()->create();
+    $teammate = User::factory()->create(['name' => 'Teammate One']);
+    $sender = User::factory()->create(['name' => 'Captain Carter']);
+    $goal = TrainingGoal::query()->create([
+        'slug' => 'combat-readiness-goal',
+        'user_id' => $sender->id,
+        'title' => 'Combat Readiness',
+        'start_date' => now()->toDateString(),
+        'target_date' => now()->addDays(30)->toDateString(),
+        'status' => 'active',
+        'partner_status' => 'accepted',
+    ]);
+
+    Standup::factory()->create([
+        'user_id' => $teammate->id,
+        'date' => today(),
+        'blockers' => 'Waiting for deployment approval.',
+    ]);
+
+    PartnerNotification::query()->create([
+        'user_id' => $user->id,
+        'from_user_id' => $sender->id,
+        'training_goal_id' => $goal->id,
+        'type' => 'checkin_logged',
+        'title' => 'Partner check-in submitted',
+        'message' => 'Captain Carter logged a training check-in.',
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertSuccessful();
+    $response->assertSee('Notifications');
+    $response->assertSee('Team Updates');
+    $response->assertSee('Partner check-in submitted');
+    $response->assertSee('Captain Carter');
+    $response->assertSee('Teammate One');
 });

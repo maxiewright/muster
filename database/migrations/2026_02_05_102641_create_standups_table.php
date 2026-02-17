@@ -41,6 +41,13 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
+
+            // Production indexes folded into base migration
+            $table->index('assigned_to');
+            $table->index('created_by');
+            $table->index('status');
+            $table->index('priority');
+            $table->index('due_date');
         });
 
         Schema::create('focus_areas', function (Blueprint $table) {
@@ -61,6 +68,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->unique(['user_id', 'date']);
+            $table->index('date');
         });
 
         Schema::create('standup_task', function (Blueprint $table) {

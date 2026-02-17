@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Enums\TaskStatus;
+use App\Events\TaskAssigned;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
+use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -80,4 +83,66 @@ test('TaskCompleted broadcast payload contains task data', function (): void {
     expect($payload['task']['title'])->toBe('Done Task');
     expect($payload['task']['status'])->toBe('completed');
     expect($payload['task']['assignee_name'])->toBe('Assignee User');
+});
+
+test('TaskAssigned implements ShouldBroadcast', function (): void {
+    $assignee = User::factory()->create();
+    $creator = User::factory()->create();
+    $task = Task::factory()->create([
+        'created_by' => $creator->id,
+        'assigned_to' => $assignee->id,
+    ]);
+
+    $event = new TaskAssigned($task);
+
+    expect($event)->toBeInstanceOf(ShouldBroadcast::class);
+});
+
+test('TaskAssigned broadcasts on assignee private channel', function (): void {
+    $assignee = User::factory()->create();
+    $creator = User::factory()->create();
+    $task = Task::factory()->create([
+        'created_by' => $creator->id,
+        'assigned_to' => $assignee->id,
+    ]);
+
+    $event = new TaskAssigned($task);
+    $channels = $event->broadcastOn();
+
+    expect($channels)->toHaveCount(1);
+    expect($channels[0])->toBeInstanceOf(PrivateChannel::class);
+    expect($channels[0]->name)->toBe("private-App.Models.User.{$assignee->id}");
+});
+
+test('TaskStatusChanged implements ShouldBroadcast', function (): void {
+    $assignee = User::factory()->create();
+    $creator = User::factory()->create();
+    $actor = User::factory()->create();
+    $task = Task::factory()->create([
+        'created_by' => $creator->id,
+        'assigned_to' => $assignee->id,
+        'status' => TaskStatus::Todo,
+    ]);
+
+    $event = new TaskStatusChanged($task, TaskStatus::Todo, TaskStatus::InProgress, $actor);
+
+    expect($event)->toBeInstanceOf(ShouldBroadcast::class);
+});
+
+test('TaskStatusChanged broadcasts on creator private channel', function (): void {
+    $assignee = User::factory()->create();
+    $creator = User::factory()->create();
+    $actor = User::factory()->create();
+    $task = Task::factory()->create([
+        'created_by' => $creator->id,
+        'assigned_to' => $assignee->id,
+        'status' => TaskStatus::Todo,
+    ]);
+
+    $event = new TaskStatusChanged($task, TaskStatus::Todo, TaskStatus::InProgress, $actor);
+    $channels = $event->broadcastOn();
+
+    expect($channels)->toHaveCount(1);
+    expect($channels[0])->toBeInstanceOf(PrivateChannel::class);
+    expect($channels[0]->name)->toBe("private-App.Models.User.{$creator->id}");
 });

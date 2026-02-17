@@ -4,6 +4,7 @@ use App\Http\Middleware\SecurityHeadersMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,9 +17,5 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(SecurityHeadersMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->report(function (Throwable $e): void {
-            if (app()->bound('sentry')) {
-                app('sentry')->captureException($e);
-            }
-        });
+        Integration::handles($exceptions);
     })->create();

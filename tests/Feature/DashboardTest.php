@@ -6,6 +6,7 @@ use App\Models\PartnerNotification;
 use App\Models\Standup;
 use App\Models\TrainingGoal;
 use App\Models\User;
+use Livewire\Livewire;
 
 test('guests are redirected to the login page', function (): void {
     $response = $this->get(route('dashboard'));
@@ -163,4 +164,43 @@ test('dashboard displays notifications and team updates from others', function (
     $response->assertSee('Partner check-in submitted');
     $response->assertSee('Captain Carter');
     $response->assertSee('Teammate One');
+});
+
+test('partner request notifications are actionable from dashboard', function (): void {
+    $owner = User::factory()->create(['name' => 'Goal Owner']);
+    $partner = User::factory()->create(['name' => 'Partner User']);
+
+    $goal = TrainingGoal::query()->create([
+        'slug' => 'actionable-partner-request-goal',
+        'user_id' => $owner->id,
+        'accountability_partner_id' => $partner->id,
+        'title' => 'Actionable Partner Request',
+        'start_date' => now()->toDateString(),
+        'target_date' => now()->addDays(30)->toDateString(),
+        'status' => 'active',
+        'partner_status' => 'pending',
+    ]);
+
+    $notification = PartnerNotification::query()->create([
+        'user_id' => $partner->id,
+        'from_user_id' => $owner->id,
+        'training_goal_id' => $goal->id,
+        'type' => 'partner_request',
+        'title' => 'New partner request',
+        'message' => 'Goal Owner invited you to support: Actionable Partner Request',
+    ]);
+
+    $this->actingAs($partner)
+        ->get(route('dashboard'))
+        ->assertSuccessful()
+        ->assertSee('Accept')
+        ->assertSee('Decline')
+        ->assertSee('Review');
+
+    Livewire::actingAs($partner)
+        ->test('dashboard')
+        ->call('acceptPartnerRequest', $notification->id);
+
+    expect($goal->fresh()->partner_status->value)->toBe('accepted');
+    expect($notification->fresh()->actioned_at)->not->toBeNull();
 });

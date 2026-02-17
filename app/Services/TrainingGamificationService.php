@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\PartnerStatus;
 use App\Enums\TrainingGamificationPoint;
 use App\Events\BadgeEarned;
+use App\Events\TrainingCheckinLogged;
 use App\Models\Badge;
 use App\Models\PartnerNotification;
 use App\Models\TrainingCheckin;
@@ -273,5 +274,7 @@ class TrainingGamificationService
                 'confidence' => $checkin->confidence_level?->value,
             ],
         ]);
+
+        TrainingCheckinLogged::dispatch($checkin, $partner);
     }
 }

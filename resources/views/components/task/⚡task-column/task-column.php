@@ -2,6 +2,7 @@
 
 use App\Enums\TaskStatus;
 use App\Events\TaskCompleted;
+use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -27,8 +28,13 @@ new class extends Component
             }
 
             $wasCompleted = $task->status === TaskStatus::Completed;
+            $oldStatus = $task->status;
             $task->update(['status' => $this->status]);
             $this->dispatch('task-moved');
+            $actor = auth()->user();
+            if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
+                TaskStatusChanged::dispatch($task->fresh(['assignee']), $oldStatus, $this->status, $actor);
+            }
 
             if (! $wasCompleted && $this->status === TaskStatus::Completed) {
                 TaskCompleted::dispatch($task->fresh());

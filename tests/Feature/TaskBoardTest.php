@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Enums\TaskStatus;
+use App\Events\TaskAssigned;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
+use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,6 +54,27 @@ test('TaskCreated is broadcast when task is created', function (): void {
         $channels = $event->broadcastOn();
 
         return count($channels) === 1 && $channels[0]->name === 'private-team';
+    });
+});
+
+test('TaskAssigned is broadcast when task is created for another user', function (): void {
+    \Illuminate\Support\Facades\Event::fake([TaskAssigned::class]);
+
+    $creator = User::factory()->lead()->create();
+    $assignee = User::factory()->create();
+
+    Livewire::actingAs($creator)
+        ->test('task.create-task-modal')
+        ->set('title', 'Assigned task')
+        ->set('status', TaskStatus::Todo->value)
+        ->set('priority', \App\Enums\TaskPriority::Medium->value)
+        ->set('assigned_to', $assignee->id)
+        ->call('save');
+
+    \Illuminate\Support\Facades\Event::assertDispatched(TaskAssigned::class, function (TaskAssigned $event) use ($assignee): bool {
+        $channels = $event->broadcastOn();
+
+        return count($channels) === 1 && $channels[0]->name === "private-App.Models.User.{$assignee->id}";
     });
 });
 
@@ -134,4 +157,29 @@ test('task card startTask moves Todo to InProgress', function (): void {
         ->call('startTask');
 
     expect($task->fresh()->status)->toBe(TaskStatus::InProgress);
+});
+
+test('task creator receives status change broadcast when assignee updates task', function (): void {
+    \Illuminate\Support\Facades\Event::fake([TaskStatusChanged::class]);
+
+    $creator = User::factory()->create();
+    $assignee = User::factory()->create();
+    $task = Task::factory()->create([
+        'created_by' => $creator->id,
+        'assigned_to' => $assignee->id,
+        'status' => TaskStatus::Todo,
+        'title' => 'Assigned task',
+    ]);
+
+    Livewire::actingAs($assignee)
+        ->test('task.task-card', ['task' => $task])
+        ->call('startTask');
+
+    \Illuminate\Support\Facades\Event::assertDispatched(TaskStatusChanged::class, function (TaskStatusChanged $event) use ($creator): bool {
+        $channels = $event->broadcastOn();
+
+        return count($channels) === 1
+            && $channels[0]->name === "private-App.Models.User.{$creator->id}"
+            && $event->toStatus === TaskStatus::InProgress;
+    });
 });

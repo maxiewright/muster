@@ -1,10 +1,12 @@
 @extends('layouts.error')
 
 @section('content')
-    <div class="flex flex-col items-center gap-4 text-center">
-        <p class="text-6xl font-semibold text-zinc-400 dark:text-zinc-500">503</p>
-        <h1 class="text-xl font-semibold text-zinc-800 dark:text-zinc-200">Be right back</h1>
-        <p class="text-sm text-zinc-600 dark:text-zinc-400">We are performing scheduled maintenance. Please try again in a few minutes.</p>
-        <a href="{{ route('home') }}" class="text-sm font-medium text-zinc-800 underline dark:text-zinc-200" wire:navigate>Back to home</a>
+    <div class="flex flex-col items-center gap-5 text-center">
+        <p class="text-xs uppercase tracking-[0.2em] text-zinc-400">Error 503</p>
+        <h1 class="text-2xl font-semibold text-zinc-50">Be right back</h1>
+        <p class="max-w-sm text-sm text-zinc-300">We are performing scheduled maintenance. Please try again in a few minutes.</p>
+        <a href="{{ route('home') }}" class="inline-flex min-h-[44px] items-center rounded-lg border border-zinc-700 px-4 text-sm font-medium text-zinc-200 transition hover:border-zinc-500 hover:bg-zinc-900" wire:navigate>
+            Back to home
+        </a>
     </div>
 @endsection

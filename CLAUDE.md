@@ -4,7 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Laravel 12 application using Livewire 4 and Flux UI for building a daily standup tracking system. The application uses Laravel Fortify for authentication (including 2FA), Socialite for OAuth, and includes features for mood tracking, event management, and daily standup submissions.
+This is a Laravel 12 application using Livewire 4 and Flux UI for building a daily standup tracking system with gamification. The application uses Laravel Fortify for authentication (including 2FA) and Socialite for OAuth.
+
+### Core Features
+- **Daily Standups**: Daily check-ins with mood tracking, tasks, blockers, and focus areas
+- **Training Goals**: Goal tracking with milestones, check-ins, and accountability partners
+- **Gamification**: Points, badges, streaks, and leaderboard system
+- **Task Management**: Personal task tracking with priorities and status
+- **Events & Calendar**: Event creation and calendar view
+- **Real-time Updates**: Broadcasting with Laravel Reverb for live notifications
 
 ## Development Commands
 
@@ -29,10 +37,13 @@ php artisan test --compact --filter=testName  # Run specific test
 
 ### Code Quality
 ```bash
-vendor/bin/pint --format agent            # Format code (auto-fix)
+vendor/bin/pint --dirty --format agent    # Format code (auto-fix changed files only)
+vendor/bin/pint --format agent            # Format all code
 vendor/bin/rector                         # Run Rector refactoring
 vendor/bin/phpstan analyse                # Static analysis (level 5)
 ```
+
+**IMPORTANT**: Always run `vendor/bin/pint --dirty --format agent` before committing code changes.
 
 ## Architecture
 
@@ -46,8 +57,14 @@ vendor/bin/phpstan analyse                # Static analysis (level 5)
 
 **Route Organization**
 - `routes/web.php` - Main public and authenticated routes
+  - Home and health check (public)
+  - Dashboard, standups, calendar, tasks (auth + verified middleware)
+  - Training routes grouped under `/training` prefix
+  - Socialite OAuth routes (guest middleware)
 - `routes/settings.php` - Settings-related Livewire routes (included in web.php)
-- Settings routes use different middleware (some require 'verified', 2FA routes may require password confirmation)
+  - Settings routes use different middleware (some require 'verified', 2FA routes may require password confirmation)
+- `routes/channels.php` - Broadcasting channel authorization
+- `routes/console.php` - Console command routes
 
 **Livewire Components**
 - Settings components in `app/Livewire/Settings/`
@@ -64,12 +81,37 @@ vendor/bin/phpstan analyse                # Static analysis (level 5)
 - User has `todaysStandup()` helper method for retrieving today's standup entry
 - Models use `casts()` method (not `$casts` property) for attribute casting
 
+**Services**
+- Business logic for complex operations in `app/Services/`
+- `GamificationService` - Handles standup check-in rewards, streak calculations, badge awarding
+- `TrainingGamificationService` - Handles training goal rewards and partner notifications
+- Services are dependency-injected into Livewire components
+
+**Events & Broadcasting**
+- Real-time features use Laravel Reverb with event broadcasting
+- Events in `app/Events/` implement `ShouldQueue` to avoid blocking requests
+- Key events: `BadgeEarned`, `PointsEarned`, `StandupCreated`, `TaskCompleted`, `TaskCreated`, `EventCompleted`, `EventCreated`
+- All broadcast to the `muster` channel
+
+**Actions (Fortify)**
+- Fortify actions in `app/Actions/Fortify/` for authentication customization
+- `CreateNewUser` - Handles user registration
+- `ResetUserPassword` - Handles password reset
+- Actions use the `PasswordValidationRules` concern
+
+**Policies**
+- Authorization logic in `app/Policies/`
+- Example: `TaskPolicy` - Controls task update/delete permissions
+
 ### Key Dependencies
 
-- **spatie/laravel-sluggable** - Used for automatic slug generation on models
-- **fruitcake/laravel-debugbar** - Available for debugging (dev only)
-- **Laravel Reverb** - Real-time broadcasting (installed)
+- **spatie/laravel-sluggable** - Automatic slug generation on models
+- **spatie/laravel-medialibrary** - Media handling (user avatars with conversions)
+- **fruitcake/laravel-debugbar** - Debugging tool (dev only)
+- **Laravel Reverb** - Real-time broadcasting with WebSockets
 - **Laravel Pail** - Log tailing (used in `composer dev`)
+- **Laravel Pulse** - Application monitoring and performance insights
+- **Sentry** - Error tracking and monitoring (configured in bootstrap/app.php)
 
 ## Development Patterns
 
@@ -78,14 +120,56 @@ Models that need slugs should use the `HasSlugFromName` trait. This configures S
 
 ### Authentication
 - Fortify handles authentication with 2FA support enabled
-- Socialite configured for OAuth providers
+- Socialite configured for OAuth providers with routes in `routes/web.php` (guest middleware)
 - Settings routes differentiate between 'auth' and 'auth, verified' middleware
+- 2FA route requires password confirmation (configured via Fortify features)
+
+### Validation
+- This app does NOT use Form Request classes (no `app/Http/Requests/` directory)
+- Validation happens directly in Livewire component actions
+- Shared validation rules extracted to Concerns: `PasswordValidationRules`, `ProfileValidationRules`
+
+### User Model Gamification Methods
+Key methods on the User model for gamification features:
+- `awardPoints(int $points, string $reason, string $type, ?Model $related = null)` - Award points and log
+- `earnBadge(Badge $badge)` - Award badge and bonus points
+- `updateStreak()` - Calculate and update daily check-in streak
+- `profileImageUrl(string $size = 'avatar')` - Get avatar URL (uploaded, Gravatar fallback, or initials)
+- `rank()` - Computed attribute for leaderboard position
+- `todaysStandup()` - Get today's standup entry
+- `latestStandup()` - Get most recent standup entry
+
+### Rate Limiting
+- Custom named rate limiters configured in `bootstrap/app.php` or service provider
+- `throttle:app` - General application rate limit
+- `throttle:standup-submit` - Specific rate limit for standup submissions
+
+### Broadcasting Pattern
+- All broadcast events implement `ShouldQueue` to avoid blocking request responses
+- Events are queued and processed by the queue worker
+- Frontend listens via Laravel Echo and Reverb
+- Use `broadcast()->toOthers()` to exclude the current user from receiving their own events
+- Example pattern:
+  ```php
+  broadcast(new BadgeEarned($user, $badge))->toOthers();
+  ```
+
+### Media Handling
+- User avatars use Spatie MediaLibrary with 'avatar' collection
+- Conversions: `thumb` (64x64), `avatar` (128x128)
+- Accepted formats: jpeg, png, webp, gif
+
+### Security
+- `SecurityHeadersMiddleware` applied globally (CSP headers with Vite nonce support)
+- Custom `/health` endpoint with database and cache checks (returns JSON with 200/503 status)
+- Sentry integration configured in `bootstrap/app.php` for error tracking
 
 ### Testing
 - Most tests are feature tests in `tests/Feature/`
 - Auth tests organized in `tests/Feature/Auth/`
 - Settings tests organized in `tests/Feature/Settings/`
 - Tests use Pest 4 syntax
+- Use model factories; check for custom states before manual setup
 
 ### Static Analysis & Refactoring
 - PHPStan configured at level 5 (can be increased)
@@ -106,6 +190,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - php - 8.4.17
 - laravel/fortify (FORTIFY) - v1
 - laravel/framework (LARAVEL) - v12
+- laravel/horizon (HORIZON) - v5
 - laravel/prompts (PROMPTS) - v0
 - laravel/pulse (PULSE) - v1
 - laravel/reverb (REVERB) - v1

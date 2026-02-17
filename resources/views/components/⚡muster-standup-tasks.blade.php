@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\StandupTaskStatus;
 use App\Enums\TaskStatus;
+use App\Events\TaskStatusChanged;
 use App\Models\StandUpTask;
 use App\Models\Standup;
 use App\Models\Task;
@@ -96,7 +97,17 @@ new class extends Component
         }
 
         $standupTask->update(['status' => $standupStatus]);
-        Task::query()->where('id', $taskId)->update(['status' => $taskStatus]);
+
+        $task = Task::query()->findOrFail($taskId);
+        $oldStatus = $task->status;
+        if ($oldStatus !== $taskStatus) {
+            $task->update(['status' => $taskStatus]);
+
+            $actor = auth()->user();
+            if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
+                TaskStatusChanged::dispatch($task->fresh(['assignee']), $oldStatus, $taskStatus, $actor);
+            }
+        }
 
         unset($this->standup, $this->completedStandupTasks, $this->plannedStandupTasks, $this->ongoingStandupTasks, $this->blockedStandupTasks);
     }

@@ -185,14 +185,24 @@ class TrainingGoalForm extends Component
         }
 
         if (! $this->isEditing && $goal->accountability_partner_id) {
-            PartnerNotification::query()->create([
-                'user_id' => $goal->accountability_partner_id,
-                'from_user_id' => Auth::id(),
-                'training_goal_id' => $goal->id,
-                'type' => 'partner_request',
-                'title' => 'New partner request',
-                'message' => Auth::user()->name.' invited you to support: '.$goal->title,
-            ]);
+            $existingRequest = PartnerNotification::query()
+                ->where('user_id', $goal->accountability_partner_id)
+                ->where('from_user_id', Auth::id())
+                ->where('training_goal_id', $goal->id)
+                ->where('type', 'partner_request')
+                ->whereNull('actioned_at')
+                ->first();
+
+            if (! $existingRequest) {
+                PartnerNotification::query()->create([
+                    'user_id' => $goal->accountability_partner_id,
+                    'from_user_id' => Auth::id(),
+                    'training_goal_id' => $goal->id,
+                    'type' => 'partner_request',
+                    'title' => 'New partner request',
+                    'message' => Auth::user()->name.' invited you to support: '.$goal->title,
+                ]);
+            }
         }
 
         session()->flash('status', $this->isEditing ? 'Training goal updated.' : 'Training goal created.');

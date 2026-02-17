@@ -3,6 +3,7 @@
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Events\TaskCompleted;
+use App\Events\TaskStatusChanged;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -115,10 +116,6 @@ new class extends Component
     public function onTaskCreated(array $payload): void
     {
         unset($this->tasks);
-        $task = $payload['task'] ?? [];
-        $title = is_string($task['title'] ?? null) ? $task['title'] : 'A task';
-        $creator = is_string($task['creator_name'] ?? null) ? $task['creator_name'] : 'Someone';
-        $this->dispatch('toast-show', duration: 5000, slots: ['text' => "{$creator} added: {$title}", 'heading' => 'New task'], dataset: ['variant' => 'success']);
     }
 
     /**
@@ -127,10 +124,6 @@ new class extends Component
     public function onTaskCompleted(array $payload): void
     {
         unset($this->tasks);
-        $task = $payload['task'] ?? [];
-        $title = is_string($task['title'] ?? null) ? $task['title'] : 'A task';
-        $assignee = is_string($task['assignee_name'] ?? null) ? $task['assignee_name'] : 'Someone';
-        $this->dispatch('toast-show', duration: 5000, slots: ['text' => "{$assignee} completed: {$title}", 'heading' => 'Task completed'], dataset: ['variant' => 'success']);
     }
 
     #[Computed]
@@ -264,7 +257,12 @@ new class extends Component
             }
 
             $wasCompleted = $task->status === TaskStatus::Completed;
+            $oldStatus = $task->status;
             $task->update(['status' => $targetStatus]);
+            $actor = auth()->user();
+            if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
+                TaskStatusChanged::dispatch($task->fresh(['assignee']), $oldStatus, $targetStatus, $actor);
+            }
 
             if (! $wasCompleted && $targetStatus === TaskStatus::Completed) {
                 TaskCompleted::dispatch($task->fresh());

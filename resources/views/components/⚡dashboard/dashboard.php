@@ -1,12 +1,71 @@
 <?php
 
+use App\Enums\PartnerStatus;
 use App\Models\Event;
 use App\Models\PartnerNotification;
 use App\Models\Standup;
+use App\Services\TrainingGamificationService;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 new class extends Component
 {
+    public function acceptPartnerRequest(int $notificationId): void
+    {
+        $notification = PartnerNotification::query()
+            ->with('goal')
+            ->where('id', $notificationId)
+            ->where('user_id', Auth::id())
+            ->where('type', 'partner_request')
+            ->first();
+
+        if (! $notification || ! $notification->goal) {
+            return;
+        }
+
+        $goal = $notification->goal;
+        if ($goal->accountability_partner_id !== Auth::id() || $goal->partner_status !== PartnerStatus::Pending) {
+            return;
+        }
+
+        $goal->update(['partner_status' => PartnerStatus::Accepted]);
+        app(TrainingGamificationService::class)->onGoalActivated($goal->fresh());
+
+        $notification->update([
+            'read_at' => now(),
+            'actioned_at' => now(),
+        ]);
+    }
+
+    public function declinePartnerRequest(int $notificationId): void
+    {
+        $notification = PartnerNotification::query()
+            ->with('goal')
+            ->where('id', $notificationId)
+            ->where('user_id', Auth::id())
+            ->where('type', 'partner_request')
+            ->first();
+
+        if (! $notification || ! $notification->goal) {
+            return;
+        }
+
+        $goal = $notification->goal;
+        if ($goal->accountability_partner_id !== Auth::id() || $goal->partner_status !== PartnerStatus::Pending) {
+            return;
+        }
+
+        $goal->update([
+            'partner_status' => PartnerStatus::Declined,
+            'partner_decline_reason' => 'Declined from dashboard notification',
+        ]);
+
+        $notification->update([
+            'read_at' => now(),
+            'actioned_at' => now(),
+        ]);
+    }
+
     public function render(): \Illuminate\Contracts\View\View
     {
         $user = auth()->user();

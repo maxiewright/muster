@@ -2,6 +2,7 @@
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Events\TaskAssigned;
 use App\Events\TaskCreated;
 use App\Models\Task;
 use App\Models\User;
@@ -143,6 +144,9 @@ new class extends Component
             $data['created_by'] = $user->id;
             $task = Task::create($data);
             TaskCreated::dispatch($task);
+            if ($task->assigned_to !== null && $task->assigned_to !== $task->created_by) {
+                TaskAssigned::dispatch($task->fresh(['assignee', 'creator']));
+            }
         }
 
         $this->dispatch('task-saved');

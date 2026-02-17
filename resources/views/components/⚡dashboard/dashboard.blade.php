@@ -70,6 +70,26 @@
                                 <flux:text size="xs" class="mt-1 !text-zinc-500">
                                     {{ $notification->fromUser?->name ?? 'System' }} · {{ $notification->created_at->diffForHumans() }}
                                 </flux:text>
+
+                                @if($notification->type === 'partner_request' && $notification->goal && !$notification->actioned_at)
+                                    <div class="mt-3 flex flex-wrap gap-2">
+                                        <flux:button size="xs" variant="primary" class="!bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600" wire:click="acceptPartnerRequest({{ $notification->id }})">
+                                            Accept
+                                        </flux:button>
+                                        <flux:button size="xs" variant="ghost" class="!text-red-300 hover:!text-red-200" wire:click="declinePartnerRequest({{ $notification->id }})">
+                                            Decline
+                                        </flux:button>
+                                        <flux:button size="xs" variant="subtle" href="{{ route('training.goals.show', $notification->goal->slug) }}" wire:navigate>
+                                            Review
+                                        </flux:button>
+                                    </div>
+                                @elseif($notification->goal)
+                                    <div class="mt-3">
+                                        <flux:button size="xs" variant="subtle" href="{{ route('training.goals.show', $notification->goal->slug) }}" wire:navigate>
+                                            View
+                                        </flux:button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

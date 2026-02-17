@@ -6,12 +6,13 @@ use App\Models\Badge;
 use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class BadgeEarned implements ShouldQueue
+class BadgeEarned implements ShouldBroadcast, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, InteractsWithSockets, SerializesModels;
 

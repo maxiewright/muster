@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('type'); // checkin, streak_bonus, badge, huddle, help
             $table->nullableMorphs('related'); // polymorphic relation to standup, event, etc.
             $table->timestamps();
+
+            // Production index folded into base migration
+            $table->index('user_id');
         });
     }
 

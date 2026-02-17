@@ -17,7 +17,14 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('role');
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('theme')->default('system');
             $table->string('password');
+
+            // Two-factor authentication (Fortify)
+            $table->text('two_factor_secret')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
+            $table->timestamp('two_factor_confirmed_at')->nullable();
+
             $table->rememberToken();
 
             // Gamification fields

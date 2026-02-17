@@ -5,12 +5,13 @@ namespace App\Events;
 use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class PointsEarned implements ShouldQueue
+class PointsEarned implements ShouldBroadcast, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, InteractsWithSockets, SerializesModels;
 

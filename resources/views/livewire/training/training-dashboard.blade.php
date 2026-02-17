@@ -44,7 +44,7 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <flux:button size="sm" variant="primary" wire:click="$dispatch('openModal', { component: 'training.partner-request-modal', arguments: { goal: {{ $request->id }} } })">
+                            <flux:button size="sm" variant="primary" href="{{ route('training.goals.show', $request->slug) }}" wire:navigate>
                                 {{ __('Review Request') }}
                             </flux:button>
                         </div>

@@ -33,6 +33,11 @@ return new class extends Migration
             $table->boolean('is_recurring')->default(false);
             $table->timestamps();
             $table->softDeletes();
+
+            // Production indexes folded into base migration
+            $table->index('user_id');
+            $table->index('starts_at');
+            $table->index('ends_at');
         });
     }
 

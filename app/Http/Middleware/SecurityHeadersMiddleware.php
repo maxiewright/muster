@@ -27,6 +27,10 @@ class SecurityHeadersMiddleware
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
+        if (! app()->isLocal()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+
         if ($cspEnabled) {
             $response->headers->set('Content-Security-Policy', $this->buildContentSecurityPolicy());
         }

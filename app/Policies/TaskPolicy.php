@@ -21,7 +21,8 @@ class TaskPolicy
 
     public function create(User $user): bool
     {
-        $role = $user->role ?? \App\Enums\Role::Lead;
+        // Default to Member (least privilege) if role is somehow null, never Lead.
+        $role = $user->role ?? \App\Enums\Role::Member;
 
         return in_array('create_tasks', $role->permissions(), true);
     }

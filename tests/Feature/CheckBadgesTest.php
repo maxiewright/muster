@@ -4,6 +4,10 @@ use App\Enums\Role;
 use App\Models\User;
 use App\Services\GamificationService;
 use Database\Seeders\BadgeSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+
+uses(RefreshDatabase::class);
 
 it('awards streak badges based on current streak', function () {
     // Seed badges
@@ -63,4 +67,34 @@ it('awards points milestone badges based on total points', function () {
         expect($user->badges->pluck('slug'))
             ->toContain($slug);
     }
+});
+
+it('uses a single batch query to load all badges rather than one query per slug', function (): void {
+    $this->seed(BadgeSeeder::class);
+
+    /** @var User $user */
+    $user = User::factory()->create([
+        'role' => Role::Member,
+        'current_streak' => 7,
+        'longest_streak' => 7,
+        'points' => 100,
+    ]);
+
+    $service = app(GamificationService::class);
+
+    $slugLookupCount = 0;
+
+    DB::listen(static function ($query) use (&$slugLookupCount): void {
+        // Count queries that look up badges individually by slug — the old N+1 pattern.
+        if (str_contains(strtolower($query->sql), '"slug"') || str_contains(strtolower($query->sql), '`slug`')) {
+            $slugLookupCount++;
+        }
+    });
+
+    $service->checkBadges($user);
+
+    // The batched implementation issues at most 1 query that filters by slug
+    // (a single whereIn across all slugs). The old N+1 approach would have issued
+    // one query per badge slug — up to 15 in total.
+    expect($slugLookupCount)->toBeLessThanOrEqual(1);
 });

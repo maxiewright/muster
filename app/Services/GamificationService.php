@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Enums\GamificationPoint;
@@ -9,6 +11,7 @@ use App\Events\StandupCreated;
 use App\Models\Badge;
 use App\Models\Standup;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 class GamificationService
 {
@@ -57,15 +60,6 @@ class GamificationService
     {
         $earnedBadges = [];
 
-        // First Check-in
-        if ($user->standups()->count() === 1) {
-            $badge = Badge::where('slug', 'first-muster')->first();
-            if ($badge && $user->earnBadge($badge)) {
-                $earnedBadges[] = $badge;
-                broadcast(new BadgeEarned($user, $badge))->toOthers();
-            }
-        }
-
         // Streak badges (aligned with BadgeSeeder)
         $streakBadges = [
             3 => 'streak-3',
@@ -76,16 +70,6 @@ class GamificationService
             60 => 'streak-60',
             90 => 'streak-90',
         ];
-
-        foreach ($streakBadges as $days => $slug) {
-            if ($user->current_streak >= $days) {
-                $badge = Badge::where('slug', $slug)->first();
-                if ($badge && $user->earnBadge($badge)) {
-                    $earnedBadges[] = $badge;
-                    broadcast(new BadgeEarned($user, $badge))->toOthers();
-                }
-            }
-        }
 
         // Points milestones (aligned with BadgeSeeder)
         $pointBadges = [
@@ -98,9 +82,40 @@ class GamificationService
             10000 => 'points-10000',
         ];
 
+        // Pre-load all relevant badges in a single query to avoid N+1 (was up to 15 queries).
+        $allSlugs = array_merge(
+            array_values($streakBadges),
+            array_values($pointBadges),
+            ['first-muster', 'hundred-days']
+        );
+
+        /** @var Collection<string, Badge> $badges */
+        $badges = Badge::whereIn('slug', $allSlugs)->get()->keyBy('slug');
+
+        // First Check-in
+        if ($user->standups()->count() === 1) {
+            $badge = $badges->get('first-muster');
+            if ($badge && $user->earnBadge($badge)) {
+                $earnedBadges[] = $badge;
+                broadcast(new BadgeEarned($user, $badge))->toOthers();
+            }
+        }
+
+        // Streak badges
+        foreach ($streakBadges as $days => $slug) {
+            if ($user->current_streak >= $days) {
+                $badge = $badges->get($slug);
+                if ($badge && $user->earnBadge($badge)) {
+                    $earnedBadges[] = $badge;
+                    broadcast(new BadgeEarned($user, $badge))->toOthers();
+                }
+            }
+        }
+
+        // Points milestone badges
         foreach ($pointBadges as $points => $slug) {
             if ($user->points >= $points) {
-                $badge = Badge::where('slug', $slug)->first();
+                $badge = $badges->get($slug);
                 if ($badge && $user->earnBadge($badge)) {
                     $earnedBadges[] = $badge;
                     broadcast(new BadgeEarned($user, $badge))->toOthers();
@@ -111,7 +126,7 @@ class GamificationService
         // Total check-ins milestone badges
         $totalCheckins = $user->standups()->count();
         if ($totalCheckins >= 100) {
-            $badge = Badge::where('slug', 'hundred-days')->first();
+            $badge = $badges->get('hundred-days');
             if ($badge && $user->earnBadge($badge)) {
                 $earnedBadges[] = $badge;
                 broadcast(new BadgeEarned($user, $badge))->toOthers();

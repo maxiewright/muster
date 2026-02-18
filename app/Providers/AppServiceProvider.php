@@ -53,6 +53,14 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('event-create', function (Request $request) {
             return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('invites', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('socialite', function (Request $request) {
+            return Limit::perMinute(20)->by($request->ip());
+        });
     }
 
     /**

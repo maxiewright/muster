@@ -60,7 +60,7 @@ class TeamInvitationController extends Controller
             'expires_at' => now()->addDays(7),
         ]);
 
-        Mail::to($invitation->email)->send(new TeamInvitationMail($invitation));
+        Mail::to($invitation->email)->queue(new TeamInvitationMail($invitation));
 
         return back()->with('status', 'Invitation sent successfully.');
     }

@@ -1,12 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int|null $event_type_id
+ * @property string $title
+ * @property string|null $description
+ * @property Carbon|null $starts_at
+ * @property Carbon|null $ends_at
+ * @property string|null $color
+ * @property bool $is_recurring
+ */
 class Event extends Model
 {
     use HasFactory;

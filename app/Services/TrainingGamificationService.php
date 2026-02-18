@@ -14,6 +14,7 @@ use App\Models\TrainingCheckin;
 use App\Models\TrainingGoal;
 use App\Models\TrainingMilestone;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 class TrainingGamificationService
 {
@@ -165,79 +166,97 @@ class TrainingGamificationService
     // BADGE CHECKS
     // ==========================================
 
+    /**
+     * @return array<int, Badge>
+     */
     protected function checkTrainingBadges(User $user): array
     {
-        $earnedBadges = [];
-
-        $completedGoals = $user->trainingGoals()
-            ->whereIn('status', ['completed', 'verified'])
-            ->count();
-
-        $goalBadges = [
+        $goalBadgeSlugs = [
             1 => 'first-training-goal',
             5 => 'training-veteran',
             10 => 'training-master',
             25 => 'training-legend',
         ];
-
-        foreach ($goalBadges as $count => $slug) {
-            if ($completedGoals >= $count) {
-                $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $slug));
-            }
-        }
-
-        $totalMinutes = $user->trainingGoals()->sum('logged_minutes');
-        $totalHours = $totalMinutes / 60;
-
-        $hourBadges = [
+        $hourBadgeSlugs = [
             10 => 'training-10-hours',
             50 => 'training-50-hours',
             100 => 'training-centurion',
             500 => 'training-marathon',
         ];
 
-        foreach ($hourBadges as $hours => $slug) {
+        /** @var Collection<string, Badge> $badges */
+        $badges = Badge::query()
+            ->whereIn('slug', array_merge(array_values($goalBadgeSlugs), array_values($hourBadgeSlugs)))
+            ->get()
+            ->keyBy('slug');
+
+        $earnedBadges = [];
+
+        $completedGoals = $user->trainingGoals()
+            ->whereIn('status', ['completed', 'verified'])
+            ->count();
+
+        foreach ($goalBadgeSlugs as $count => $slug) {
+            if ($completedGoals >= $count) {
+                $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $badges->get($slug)));
+            }
+        }
+
+        $totalMinutes = $user->trainingGoals()->sum('logged_minutes');
+        $totalHours = $totalMinutes / 60;
+
+        foreach ($hourBadgeSlugs as $hours => $slug) {
             if ($totalHours >= $hours) {
-                $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $slug));
+                $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $badges->get($slug)));
             }
         }
 
         return $earnedBadges;
     }
 
+    /**
+     * @return array<int, Badge>
+     */
     protected function checkPartnerBadges(User $user): array
     {
-        $earnedBadges = [];
-
-        $verificationsCount = TrainingGoal::where('verified_by', $user->id)->count()
-            + TrainingMilestone::where('verified_by', $user->id)->count();
-
-        $partnerBadges = [
+        $partnerBadgeSlugs = [
             1 => 'first-verification',
             5 => 'trusted-partner',
             10 => 'accountability-ace',
             25 => 'mentor',
         ];
 
-        foreach ($partnerBadges as $count => $slug) {
+        /** @var Collection<string, Badge> $badges */
+        $badges = Badge::query()
+            ->whereIn('slug', array_merge(array_values($partnerBadgeSlugs), ['feedback-champion']))
+            ->get()
+            ->keyBy('slug');
+
+        $earnedBadges = [];
+
+        $verificationsCount = TrainingGoal::query()->where('verified_by', $user->id)->count()
+            + TrainingMilestone::query()->where('verified_by', $user->id)->count();
+
+        foreach ($partnerBadgeSlugs as $count => $slug) {
             if ($verificationsCount >= $count) {
-                $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $slug));
+                $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $badges->get($slug)));
             }
         }
 
-        $feedbackCount = TrainingCheckin::where('feedback_by', $user->id)->count();
+        $feedbackCount = TrainingCheckin::query()->where('feedback_by', $user->id)->count();
 
         if ($feedbackCount >= 10) {
-            $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, 'feedback-champion'));
+            $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $badges->get('feedback-champion')));
         }
 
         return $earnedBadges;
     }
 
-    protected function awardBadgeIfExists(User $user, string $slug): array
+    /**
+     * @return array<int, Badge>
+     */
+    protected function awardBadgeIfExists(User $user, ?Badge $badge): array
     {
-        $badge = Badge::where('slug', $slug)->first();
-
         if ($badge && $user->earnBadge($badge)) {
             broadcast(new BadgeEarned($user, $badge))->toOthers();
 

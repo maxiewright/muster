@@ -29,6 +29,9 @@ Route::get('/', function (): Factory|View|RedirectResponse {
 Route::middleware('guest')->group(function (): void {
     Route::get('/setup', [OnboardingSetupController::class, 'create'])->name('setup');
     Route::post('/setup', [OnboardingSetupController::class, 'store'])->name('setup.store');
+});
+
+Route::middleware(['guest', 'throttle:invites'])->group(function (): void {
     Route::get('/invites/{invitation:token}', [TeamInvitationController::class, 'showAcceptForm'])->name('invites.accept');
     Route::post('/invites/{invitation:token}', [TeamInvitationController::class, 'accept'])->name('invites.accept.store');
 });
@@ -81,7 +84,7 @@ Route::middleware(['auth', 'verified', 'throttle:app'])->group(function () {
 
 });
 
-Route::middleware(['guest'])->group(function () {
+Route::middleware(['guest', 'throttle:socialite'])->group(function () {
     Route::get('auth/{provider}/redirect', [SocialiteController::class, 'redirect'])
         ->name('socialite.redirect');
 

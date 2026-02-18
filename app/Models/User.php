@@ -161,19 +161,19 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(PartnerNotification::class);
     }
 
-    public function activeTrainingGoals()
+    public function activeTrainingGoals(): HasMany
     {
         return $this->trainingGoals()->where('status', TrainingGoalStatus::Active);
     }
 
-    public function pendingPartnerRequests()
+    public function pendingPartnerRequests(): HasMany
     {
         return $this->partnerGoals()
             ->where('accountability_partner_id', $this->id)
             ->where('partner_status', PartnerStatus::Pending);
     }
 
-    public function unreadPartnerNotifications()
+    public function unreadPartnerNotifications(): HasMany
     {
         return $this->partnerNotifications()->whereNull('read_at');
     }

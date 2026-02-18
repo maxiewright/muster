@@ -133,6 +133,11 @@ class TrainingGoalForm extends Component
 
     public function save(): void
     {
+        // Re-verify authorization at save time (not just mount) to guard against state manipulation.
+        if ($this->isEditing && $this->goal) {
+            abort_unless($this->goal->canBeEditedBy(Auth::user()), 403);
+        }
+
         $this->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],

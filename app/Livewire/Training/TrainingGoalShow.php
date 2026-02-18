@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\Training;
 
-use App\Models\TrainingGoal;
-use App\Models\PartnerNotification;
-use App\Models\TrainingMilestone;
-use App\Models\TrainingCheckin;
 use App\Enums\PartnerStatus;
-use App\Enums\MilestoneStatus;
-use App\Enums\TrainingGoalStatus;
+use App\Models\PartnerNotification;
+use App\Models\TrainingGoal;
 use App\Services\TrainingGamificationService;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -23,8 +20,16 @@ class TrainingGoalShow extends Component
     public function mount(TrainingGoal $goal): void
     {
         $this->goal = $goal->load(['user', 'partner', 'milestones', 'checkins.user', 'checkins.feedbackProvider']);
-        
-        // Mark notifications as read if this is the partner/owner
+
+        // Enforce visibility: private goals are only accessible by the owner or accepted partner.
+        if (! $this->goal->is_public) {
+            abort_unless(
+                Auth::id() === $this->goal->user_id || Auth::id() === $this->goal->accountability_partner_id,
+                403
+            );
+        }
+
+        // Mark notifications as read for the owner or partner.
         if (Auth::id() === $this->goal->user_id || Auth::id() === $this->goal->accountability_partner_id) {
             PartnerNotification::where('training_goal_id', $this->goal->id)
                 ->where('user_id', Auth::id())
@@ -59,15 +64,15 @@ class TrainingGoalShow extends Component
 
     public function verifyMilestone(int $milestoneId, TrainingGamificationService $gamification): void
     {
-        if (!$this->canVerify) {
-            return;
-        }
+        // Re-check against live DB state to prevent stale cached computed values from being exploited.
+        abort_unless($this->goal->fresh()->canBeVerifiedBy(Auth::user()), 403);
 
-        $milestone = TrainingMilestone::findOrFail($milestoneId);
+        // Scope to this goal's milestones to prevent cross-goal manipulation.
+        $milestone = $this->goal->milestones()->findOrFail($milestoneId);
         $milestone->verify(Auth::user());
-        
+
         $gamification->onMilestoneVerified($milestone, Auth::user());
-        
+
         $this->goal->refresh();
         $this->dispatch('milestone-verified');
         session()->flash('status', 'Milestone verified!');
@@ -75,45 +80,42 @@ class TrainingGoalShow extends Component
 
     public function verifyGoal(TrainingGamificationService $gamification): void
     {
-        if (!$this->canVerify) {
-            return;
-        }
+        // Re-check against live DB state to prevent stale cached computed values from being exploited.
+        abort_unless($this->goal->fresh()->canBeVerifiedBy(Auth::user()), 403);
 
         $this->goal->verify(Auth::user());
         $gamification->onGoalVerified($this->goal, Auth::user());
-        
+
         session()->flash('status', 'Goal verified and completed!');
     }
 
     public function acceptPartnerRequest(TrainingGamificationService $gamification): void
     {
-        if (!$this->isPartner) {
-            return;
-        }
+        // Re-check that the current user is still the partner on this goal in the DB.
+        abort_unless($this->goal->fresh()->accountability_partner_id === Auth::id(), 403);
 
         $this->goal->update(['partner_status' => PartnerStatus::Accepted]);
         $gamification->onGoalActivated($this->goal);
-        
+
         session()->flash('status', 'Partner request accepted!');
         $this->goal->refresh();
     }
 
     public function declinePartnerRequest(?string $reason = null): void
     {
-        if (!$this->isPartner) {
-            return;
-        }
+        // Re-check that the current user is still the partner on this goal in the DB.
+        abort_unless($this->goal->fresh()->accountability_partner_id === Auth::id(), 403);
 
         $this->goal->update([
             'partner_status' => PartnerStatus::Declined,
-            'partner_decline_reason' => $reason
+            'partner_decline_reason' => $reason,
         ]);
-        
+
         session()->flash('status', 'Partner request declined.');
         $this->redirect(route('training.dashboard'));
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.training.training-goal-show')
             ->layout('layouts.app');

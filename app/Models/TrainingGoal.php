@@ -43,22 +43,25 @@ class TrainingGoal extends Model
         'is_public',
     ];
 
-    protected $casts = [
-        'start_date' => 'date',
-        'target_date' => 'date',
-        'completed_at' => 'datetime',
-        'verified_at' => 'datetime',
-        'status' => TrainingGoalStatus::class,
-        'partner_status' => PartnerStatus::class,
-        'category' => TrainingCategory::class,
-        'is_public' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'target_date' => 'date',
+            'completed_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'status' => TrainingGoalStatus::class,
+            'partner_status' => PartnerStatus::class,
+            'category' => TrainingCategory::class,
+            'is_public' => 'boolean',
+        ];
+    }
 
     protected static function booted(): void
     {
         static::creating(function (TrainingGoal $goal) {
             if (empty($goal->slug)) {
-                $goal->slug = Str::slug($goal->title) . '-' . Str::random(8);
+                $goal->slug = Str::slug($goal->title).'-'.Str::random(8);
             }
         });
     }
@@ -114,7 +117,7 @@ class TrainingGoal extends Model
     public function scopeAsPartner($query, User $user)
     {
         return $query->where('accountability_partner_id', $user->id)
-                     ->where('partner_status', PartnerStatus::Accepted);
+            ->where('partner_status', PartnerStatus::Accepted);
     }
 
     public function scopePublic($query)
@@ -125,7 +128,7 @@ class TrainingGoal extends Model
     public function scopeNeedingPartnerResponse($query, User $user)
     {
         return $query->where('accountability_partner_id', $user->id)
-                     ->where('partner_status', PartnerStatus::Pending);
+            ->where('partner_status', PartnerStatus::Pending);
     }
 
     // ==========================================
@@ -137,6 +140,7 @@ class TrainingGoal extends Model
         if ($this->completed_at) {
             return 0;
         }
+
         return max(0, (int) now()->diffInDays($this->target_date, false));
     }
 
@@ -148,12 +152,13 @@ class TrainingGoal extends Model
     public function getDaysElapsedAttribute(): int
     {
         $end = $this->completed_at ?? now();
+
         return max(0, (int) $this->start_date->diffInDays($end));
     }
 
     public function getIsOverdueAttribute(): bool
     {
-        return !$this->completed_at && $this->target_date->isPast();
+        return ! $this->completed_at && $this->target_date->isPast();
     }
 
     public function getLoggedHoursAttribute(): float
@@ -173,7 +178,7 @@ class TrainingGoal extends Model
 
     public function getHasPartnerAttribute(): bool
     {
-        return $this->accountability_partner_id !== null 
+        return $this->accountability_partner_id !== null
             && $this->partner_status === PartnerStatus::Accepted;
     }
 
@@ -184,7 +189,7 @@ class TrainingGoal extends Model
     public function recalculateProgress(): void
     {
         $milestones = $this->milestones;
-        
+
         if ($milestones->isEmpty()) {
             // No milestones - base on time elapsed vs total time
             $this->progress_percentage = min(100, (int) (($this->getDaysElapsedAttribute() / max(1, $this->getDaysTotalAttribute())) * 100));
@@ -193,7 +198,7 @@ class TrainingGoal extends Model
             $completed = $milestones->whereIn('status', ['completed', 'verified'])->count();
             $this->progress_percentage = (int) (($completed / $milestones->count()) * 100);
         }
-        
+
         $this->save();
     }
 

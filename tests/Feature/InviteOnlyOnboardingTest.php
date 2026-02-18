@@ -53,7 +53,7 @@ test('lead can send an email invitation', function (): void {
     expect($invitation)->not->toBeNull();
     expect($invitation?->email)->toBe('new.member@example.com');
 
-    Mail::assertSent(TeamInvitationMail::class, 1);
+    Mail::assertQueued(TeamInvitationMail::class, 1);
 });
 
 test('invited user can accept invitation and join team', function (): void {

@@ -24,7 +24,7 @@ class Profile extends Component
     /**
      * @var \Livewire\TemporaryUploadedFile|null
      */
-    public $avatar = null;
+    public $avatar;
 
     /**
      * Mount the component.

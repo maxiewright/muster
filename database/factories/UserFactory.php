@@ -33,10 +33,34 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
-            'points' => 0,
-            'current_streak' => 0,
-            'longest_streak' => 0,
         ];
+    }
+
+    /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (\App\Models\User $user) {
+            // Refresh to load database-defaulted columns (points, current_streak, longest_streak)
+            // that are not mass-assignable, ensuring Model::shouldBeStrict() compatibility.
+            $user->refresh();
+        });
+    }
+
+    /**
+     * Set gamification stats (points, streaks) on the user.
+     * These fields are guarded and set via forceFill after creation.
+     */
+    public function withStats(int $points = 0, int $currentStreak = 0, int $longestStreak = 0): static
+    {
+        return $this->afterCreating(function (\App\Models\User $user) use ($points, $currentStreak, $longestStreak) {
+            $user->forceFill([
+                'points' => $points,
+                'current_streak' => $currentStreak,
+                'longest_streak' => $longestStreak,
+            ])->save();
+        });
     }
 
     public function lead(): static

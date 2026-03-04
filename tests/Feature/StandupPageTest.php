@@ -5,7 +5,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('loads the standup page and shows the step heading', function () {
+it('loads the standup page and shows the step heading', function (): void {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user)->get(route('standup.create'));

@@ -30,7 +30,7 @@ class SocialiteController extends Controller
         $email = $socialiteUser->getEmail();
 
         if (empty($email)) {
-            return redirect()->route('login')->withErrors([
+            return to_route('login')->withErrors([
                 'socialite' => 'Your '.$provider.' account does not provide an email address.',
             ]);
         }
@@ -53,10 +53,11 @@ class SocialiteController extends Controller
                     'email' => $email,
                     'password' => Hash::make(str()->random(24)),
                     'role' => Role::Lead->value,
-                    'email_verified_at' => now(),
                     'oauth_provider' => $provider,
                     'oauth_id' => $socialiteUser->getId(),
                 ]);
+
+                $user->forceFill(['email_verified_at' => now()])->save();
             } else {
                 $invitation = TeamInvitation::query()
                     ->pending()
@@ -65,7 +66,7 @@ class SocialiteController extends Controller
                     ->first();
 
                 if (! $invitation || $invitation->hasExpired()) {
-                    return redirect()->route('login')->withErrors([
+                    return to_route('login')->withErrors([
                         'socialite' => 'No active invitation found for this email.',
                     ]);
                 }
@@ -75,11 +76,11 @@ class SocialiteController extends Controller
                     'email' => $email,
                     'password' => Hash::make(str()->random(24)),
                     'role' => $invitation->role,
-                    'email_verified_at' => now(),
                     'oauth_provider' => $provider,
                     'oauth_id' => $socialiteUser->getId(),
                 ]);
 
+                $user->forceFill(['email_verified_at' => now()])->save();
                 $invitation->markAsAccepted();
             }
         } elseif (! $user->oauth_provider || ! $user->oauth_id) {

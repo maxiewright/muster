@@ -39,7 +39,7 @@ class TrainingDashboard extends Component
     }
 
     #[Computed]
-    public function stats()
+    public function stats(): array
     {
         $user = Auth::user();
 

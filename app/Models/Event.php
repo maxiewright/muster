@@ -59,7 +59,7 @@ class Event extends Model
     /**
      * Get the color from the event type
      */
-    public function getTypeColorAttribute(): ?string
+    protected function getTypeColorAttribute(): ?string
     {
         return $this->type?->color;
     }

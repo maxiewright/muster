@@ -33,7 +33,8 @@ class TeamInvitation extends Model
         return $this->belongsTo(User::class, 'invited_by_user_id');
     }
 
-    public function scopePending($query)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function pending($query)
     {
         return $query->whereNull('accepted_at');
     }

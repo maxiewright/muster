@@ -24,11 +24,7 @@ test('authenticated users can visit the achievements page', function (): void {
 });
 
 test('achievements page displays points and streak', function (): void {
-    $user = User::factory()->create([
-        'points' => 150,
-        'current_streak' => 5,
-        'longest_streak' => 10,
-    ]);
+    $user = User::factory()->withStats(points: 150, currentStreak: 5, longestStreak: 10)->create();
     $this->actingAs($user);
 
     $response = $this->get(route('gamification'));
@@ -55,8 +51,8 @@ test('achievements page displays earned badges', function (): void {
 });
 
 test('achievements page displays leaderboard', function (): void {
-    $user = User::factory()->create(['points' => 100]);
-    User::factory()->create(['points' => 500, 'name' => 'Top Scorer']);
+    $user = User::factory()->withStats(points: 100)->create();
+    User::factory()->withStats(points: 500)->create(['name' => 'Top Scorer']);
 
     $this->actingAs($user);
 

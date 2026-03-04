@@ -33,16 +33,16 @@ new class extends Component
             $this->dispatch('task-moved');
             $actor = auth()->user();
             if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
-                TaskStatusChanged::dispatch($task->fresh(['assignee']), $oldStatus, $this->status, $actor);
+                event(new \App\Events\TaskStatusChanged($task->fresh(['assignee']), $oldStatus, $this->status, $actor));
             }
 
             if (! $wasCompleted && $this->status === TaskStatus::Completed) {
-                TaskCompleted::dispatch($task->fresh());
+                event(new \App\Events\TaskCompleted($task->fresh()));
             }
         });
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.task.⚡task-column.task-column');
     }

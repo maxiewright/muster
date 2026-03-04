@@ -34,7 +34,11 @@ class TaskPolicy
 
     public function delete(User $user, Task $task): bool
     {
-        return $user->isLead() || $task->created_by === $user->id;
+        if ($user->isLead()) {
+            return true;
+        }
+
+        return $task->created_by === $user->id;
     }
 
     public function restore(User $user, Task $task): bool

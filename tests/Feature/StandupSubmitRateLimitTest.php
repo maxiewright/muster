@@ -2,7 +2,7 @@
 
 use App\Models\User;
 
-test('authenticated user gets 429 after exceeding standup submit limit', function () {
+test('authenticated user gets 429 after exceeding standup submit limit', function (): void {
     $user = User::factory()->create();
 
     $this->actingAs($user);

@@ -98,7 +98,7 @@ new class extends Component
                 ->with(['user', 'type'])
                 ->where('starts_at', '>=', now())
                 ->where('starts_at', '<=', now()->addDays(7))
-                ->orderBy('starts_at')
+                ->oldest('starts_at')
                 ->limit(5)
                 ->get(),
 

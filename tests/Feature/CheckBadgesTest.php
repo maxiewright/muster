@@ -9,21 +9,18 @@ use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-it('awards streak badges based on current streak', function () {
+it('awards streak badges based on current streak', function (): void {
     // Seed badges
     $this->seed(BadgeSeeder::class);
 
     /** @var User $user */
-    $user = User::factory()->create([
+    $user = User::factory()->withStats(points: 0, currentStreak: 21, longestStreak: 21)->create([
         'role' => Role::Member,
-        'current_streak' => 21,
-        'longest_streak' => 21,
-        'points' => 0,
     ]);
 
     $service = app(GamificationService::class);
 
-    $earned = $service->checkBadges($user);
+    $earned = $service->checkBadges($user->fresh());
 
     // Refresh relations
     $user->load('badges');
@@ -42,21 +39,18 @@ it('awards streak badges based on current streak', function () {
     expect($earnedAgain)->toBeArray();
 });
 
-it('awards points milestone badges based on total points', function () {
+it('awards points milestone badges based on total points', function (): void {
     // Seed badges
     $this->seed(BadgeSeeder::class);
 
     /** @var User $user */
-    $user = User::factory()->create([
+    $user = User::factory()->withStats(points: 2500, currentStreak: 0, longestStreak: 0)->create([
         'role' => Role::Member,
-        'points' => 2500,
-        'current_streak' => 0,
-        'longest_streak' => 0,
     ]);
 
     $service = app(GamificationService::class);
 
-    $service->checkBadges($user);
+    $service->checkBadges($user->fresh());
     $user->load('badges');
 
     $expectedPointSlugs = [
@@ -73,11 +67,8 @@ it('uses a single batch query to load all badges rather than one query per slug'
     $this->seed(BadgeSeeder::class);
 
     /** @var User $user */
-    $user = User::factory()->create([
+    $user = User::factory()->withStats(points: 100, currentStreak: 7, longestStreak: 7)->create([
         'role' => Role::Member,
-        'current_streak' => 7,
-        'longest_streak' => 7,
-        'points' => 100,
     ]);
 
     $service = app(GamificationService::class);

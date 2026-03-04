@@ -7,7 +7,9 @@ test('guest users can view the home page', function (): void {
 
     $response = $this->get(route('home'));
 
-    $response->assertOk();
+    $response->assertOk()
+        ->assertSee(asset('favicon.ico').'?v=', false)
+        ->assertSee('src="'.asset('logo.svg').'"', false);
 });
 
 test('home redirects to setup when no users exist', function (): void {

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\MediaLibrary\HasMedia;
@@ -31,9 +32,6 @@ class User extends Authenticatable implements HasMedia
         'oauth_provider',
         'oauth_id',
         'role',
-        'points',
-        'current_streak',
-        'longest_streak',
         'theme',
     ];
 
@@ -100,7 +98,7 @@ class User extends Authenticatable implements HasMedia
     public function profileImageUrl(string $size = 'avatar'): string
     {
         $media = $this->getFirstMedia('avatar');
-        if ($media) {
+        if ($media instanceof \Spatie\MediaLibrary\MediaCollections\Models\Media) {
             return $media->getUrl($size);
         }
         $hash = md5(strtolower(trim($this->email)));
@@ -178,12 +176,12 @@ class User extends Authenticatable implements HasMedia
         return $this->partnerNotifications()->whereNull('read_at');
     }
 
-    public function getActiveGoalsCountAttribute(): int
+    protected function getActiveGoalsCountAttribute(): int
     {
         return $this->trainingGoals()->where('status', TrainingGoalStatus::Active)->count();
     }
 
-    public function getPartnerGoalsCountAttribute(): int
+    protected function getPartnerGoalsCountAttribute(): int
     {
         return $this->partnerGoals()
             ->where('partner_status', PartnerStatus::Accepted)
@@ -218,7 +216,7 @@ class User extends Authenticatable implements HasMedia
             'points' => $points,
             'reason' => $reason,
             'type' => $type,
-            'related_type' => $related ? get_class($related) : null,
+            'related_type' => $related instanceof \Illuminate\Database\Eloquent\Model ? get_class($related) : null,
             'related_id' => $related?->id,
         ]);
 
@@ -237,19 +235,26 @@ class User extends Authenticatable implements HasMedia
             ->first();
 
         if ($previousStandup && $previousStandup->date->toDateString() === $yesterday) {
-            // Continuing streak
-            $this->current_streak = $this->current_streak + 1;
+            // Continuing streak -- use atomic increment to prevent lost updates
+            $this->increment('current_streak');
         } else {
-            // Streak broken or first check-in
-            $this->current_streak = 1;
+            // Streak broken or first check-in -- reset atomically
+            $this->forceFill(['current_streak' => 1])->save();
         }
 
-        // Update longest streak if needed
-        if ($this->current_streak > $this->longest_streak) {
-            $this->longest_streak = $this->current_streak;
-        }
+        // Refresh to get the updated value after atomic operation
+        $this->refresh();
 
-        $this->save();
+        // Update longest streak atomically using MAX to avoid read-modify-write race
+        // MAX() is compatible with both PostgreSQL and SQLite
+        $this->query()
+            ->where('id', $this->id)
+            ->update([
+                'longest_streak' => DB::raw("MAX(longest_streak, {$this->current_streak})"),
+            ]);
+
+        // Refresh to reflect the longest_streak update in the model
+        $this->refresh();
     }
 
     public function earnBadge(Badge $badge): bool
@@ -267,9 +272,9 @@ class User extends Authenticatable implements HasMedia
         return true;
     }
 
-    public function rank(): Attribute
+    protected function rank(): Attribute
     {
-        return new Attribute(function () {
+        return new Attribute(function (): int|float {
             return User::where('points', '>', $this->points)->count() + 1;
         });
     }

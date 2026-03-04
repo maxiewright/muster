@@ -81,7 +81,7 @@ new class extends Component
             'total_team' => $this->teamMembers->count(),
             'tasks_planned' => $standups->sum(fn ($s) => $s->tasks->where('pivot.status', StandupTaskStatus::Planned->value)->count()),
             'tasks_completed' => $standups->sum(fn ($s) => $s->tasks->where('pivot.status', StandupTaskStatus::Completed->value)->count()),
-            'blockers' => $standups->filter(fn ($s) => ! empty($s->blockers))->count(),
+            'blockers' => $standups->filter(fn ($s): bool => ! empty($s->blockers))->count(),
             'moods' => $standups->groupBy(fn ($s) => $s->mood?->value)->map->count(),
         ];
     }
@@ -93,7 +93,7 @@ new class extends Component
         unset($this->stats);
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.standup.⚡standup-board.standup-board');
     }

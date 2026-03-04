@@ -2,11 +2,11 @@
 
 use App\Enums\TrainingGamificationPoint;
 
-it('has correct number of cases', function () {
+it('has correct number of cases', function (): void {
     expect(TrainingGamificationPoint::cases())->toHaveCount(15);
 });
 
-it('maps labels and point values correctly for goal lifecycle', function () {
+it('maps labels and point values correctly for goal lifecycle', function (): void {
     expect(TrainingGamificationPoint::GoalCreated->label())->toBe('Goal Created')
         ->and(TrainingGamificationPoint::GoalCreated->points())->toBe(5)
         ->and(TrainingGamificationPoint::GoalActivated->label())->toBe('Goal Activated')
@@ -19,7 +19,7 @@ it('maps labels and point values correctly for goal lifecycle', function () {
         ->and(TrainingGamificationPoint::GoalEarlyCompletion->points())->toBe(20);
 });
 
-it('maps labels and point values correctly for milestones and check-ins', function () {
+it('maps labels and point values correctly for milestones and check-ins', function (): void {
     expect(TrainingGamificationPoint::MilestoneCompleted->label())->toBe('Milestone Completed')
         ->and(TrainingGamificationPoint::MilestoneCompleted->points())->toBe(15)
         ->and(TrainingGamificationPoint::MilestoneVerified->label())->toBe('Milestone Verified')
@@ -32,7 +32,7 @@ it('maps labels and point values correctly for milestones and check-ins', functi
         ->and(TrainingGamificationPoint::CheckinStreakBonus->points())->toBe(2);
 });
 
-it('maps labels and point values correctly for partner activities', function () {
+it('maps labels and point values correctly for partner activities', function (): void {
     expect(TrainingGamificationPoint::PartnerAccepted->label())->toBe('Partner Accepted')
         ->and(TrainingGamificationPoint::PartnerAccepted->points())->toBe(10)
         ->and(TrainingGamificationPoint::PartnerFeedback->label())->toBe('Partner Feedback')

@@ -103,8 +103,10 @@ new class extends Component
         }
 
         $user = auth()->user();
-
-        return $user->isLead() || $this->task->created_by === $user->id;
+        if ($user->isLead()) {
+            return true;
+        }
+        return $this->task->created_by === $user->id;
     }
 
     public function save(): void
@@ -143,9 +145,9 @@ new class extends Component
         } else {
             $data['created_by'] = $user->id;
             $task = Task::create($data);
-            TaskCreated::dispatch($task);
+            event(new \App\Events\TaskCreated($task));
             if ($task->assigned_to !== null && $task->assigned_to !== $task->created_by) {
-                TaskAssigned::dispatch($task->fresh(['assignee', 'creator']));
+                event(new \App\Events\TaskAssigned($task->fresh(['assignee', 'creator'])));
             }
         }
 
@@ -164,7 +166,7 @@ new class extends Component
         $this->dispatch('task-deleted');
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.task.⚡create-task-modal.create-task-modal');
     }

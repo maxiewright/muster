@@ -2,7 +2,7 @@
 
 use App\Enums\GamificationPoint;
 
-it('maps labels and point values correctly', function () {
+it('maps labels and point values correctly', function (): void {
     expect(GamificationPoint::Checkin->label())->toBe('Check-in')
         ->and(GamificationPoint::Checkin->points())->toBe(10)
         ->and(GamificationPoint::StreakBonus->label())->toBe('Streak Bonus')

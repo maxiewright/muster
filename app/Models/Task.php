@@ -176,9 +176,14 @@ class Task extends Model
 
     public function canBeEditedBy(User $user): bool
     {
-        return $user->isLead() ||
-            $this->created_by === $user->id ||
-            $this->assigned_to === $user->id;
+        if ($user->isLead()) {
+            return true;
+        }
+        if ($this->created_by === $user->id) {
+            return true;
+        }
+
+        return $this->assigned_to === $user->id;
     }
 
     public function getSlugOptions(): SlugOptions

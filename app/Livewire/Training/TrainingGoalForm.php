@@ -177,7 +177,7 @@ class TrainingGoalForm extends Component
         }
 
         $rows = collect($this->milestones)
-            ->filter(fn (array $milestone): bool => trim((string) ($milestone['title'] ?? '')) !== '')
+            ->filter(fn (array $milestone): bool => trim($milestone['title'] ?? '') !== '')
             ->values();
 
         foreach ($rows as $index => $milestone) {

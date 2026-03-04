@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Gate::define('viewPulse', function (User $user) {
+        Gate::define('viewPulse', function (User $user): bool {
             return $user->isLead();
         });
 
@@ -87,8 +87,6 @@ class AppServiceProvider extends ServiceProvider
 
     private function configureModels(): void
     {
-        Model::unguard();
-
         Model::automaticallyEagerLoadRelationships();
 
         Model::shouldBeStrict();

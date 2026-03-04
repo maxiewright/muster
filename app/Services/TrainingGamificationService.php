@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Enums\PartnerStatus;
 use App\Enums\TrainingGamificationPoint;
 use App\Events\BadgeEarned;
-use App\Events\TrainingCheckinLogged;
 use App\Models\Badge;
 use App\Models\PartnerNotification;
 use App\Models\TrainingCheckin;
@@ -15,6 +14,7 @@ use App\Models\TrainingGoal;
 use App\Models\TrainingMilestone;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TrainingGamificationService
 {
@@ -93,16 +93,31 @@ class TrainingGamificationService
 
     public function onMilestoneCompleted(TrainingMilestone $milestone): array
     {
-        $points = [];
-        $user = $milestone->goal->user;
+        // Early return if points were already awarded (idempotency guard)
+        if ($milestone->points_awarded) {
+            return [];
+        }
 
-        $milestonePoints = $milestone->points_value ?: TrainingGamificationPoint::MilestoneCompleted->points();
-        $user->awardPoints($milestonePoints, "Completed milestone: {$milestone->title}", 'milestone', $milestone);
-        $points[] = ['points' => $milestonePoints, 'reason' => "🎯 Milestone: {$milestone->title}"];
+        return DB::transaction(function () use ($milestone): array {
+            // Re-fetch with pessimistic lock to prevent double-award on concurrent calls
+            $milestone = TrainingMilestone::query()->lockForUpdate()->findOrFail($milestone->id);
 
-        $milestone->update(['points_awarded' => true]);
+            if ($milestone->points_awarded) {
+                return [];
+            }
 
-        return $points;
+            $points = [];
+            $user = $milestone->goal->user;
+
+            $milestonePoints = $milestone->points_value ?: TrainingGamificationPoint::MilestoneCompleted->points();
+            $user->awardPoints($milestonePoints, "Completed milestone: {$milestone->title}", 'milestone', $milestone);
+            $points[] = ['points' => $milestonePoints, 'reason' => "🎯 Milestone: {$milestone->title}"];
+
+            $milestone->points_awarded = true;
+            $milestone->save();
+
+            return $points;
+        });
     }
 
     public function onMilestoneVerified(TrainingMilestone $milestone, User $verifier): array
@@ -246,7 +261,7 @@ class TrainingGamificationService
         $feedbackCount = TrainingCheckin::query()->where('feedback_by', $user->id)->count();
 
         if ($feedbackCount >= 10) {
-            $earnedBadges = array_merge($earnedBadges, $this->awardBadgeIfExists($user, $badges->get('feedback-champion')));
+            return array_merge($earnedBadges, $this->awardBadgeIfExists($user, $badges->get('feedback-champion')));
         }
 
         return $earnedBadges;
@@ -294,6 +309,6 @@ class TrainingGamificationService
             ],
         ]);
 
-        TrainingCheckinLogged::dispatch($checkin, $partner);
+        event(new \App\Events\TrainingCheckinLogged($checkin, $partner));
     }
 }

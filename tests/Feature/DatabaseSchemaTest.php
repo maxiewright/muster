@@ -33,7 +33,7 @@ it('has production indexes defined in base create migrations', function (): void
     $userCheckinsIndexes = Schema::getIndexListing('user_checkins');
     // Unique name may vary by driver; check presence of the unique on (user_id, on) via Schema builder helper
     // getIndexListing returns array of index names; default for composite unique is table_columns_unique
-    expect(collect($userCheckinsIndexes)->first(fn ($name) => str_contains($name, 'user_checkins_user_id_on_unique')))->not->toBeNull();
+    expect(collect($userCheckinsIndexes)->first(fn ($name): bool => str_contains($name, 'user_checkins_user_id_on_unique')))->not->toBeNull();
 });
 
 it('created pivot tables without soft deletes', function (): void {

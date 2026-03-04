@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Livewire\Training;
 
-use App\Models\TrainingGoal;
-use App\Models\TrainingCheckin;
-use App\Models\TrainingMilestone;
 use App\Enums\ConfidenceLevel;
+use App\Models\TrainingGoal;
+use App\Models\TrainingMilestone;
 use App\Services\TrainingGamificationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -16,18 +15,27 @@ use Livewire\Component;
 class TrainingCheckinForm extends Component
 {
     public TrainingGoal $goal;
-    
+
     public string $progress_update = '';
+
     public string $learnings = '';
+
     public string $blockers = '';
+
     public string $next_steps = '';
+
     public int $minutes_logged = 0;
+
     public string $confidence_level = '';
+
     public ?int $milestone_id = null;
 
     public function mount(TrainingGoal $goal): void
     {
         $this->goal = $goal;
+
+        abort_unless($this->goal->user_id === Auth::id(), 403);
+
         $this->confidence_level = ConfidenceLevel::OnTrack->value;
     }
 
@@ -53,7 +61,7 @@ class TrainingCheckinForm extends Component
     }
 
     #[Computed]
-    public function confidenceLevels()
+    public function confidenceLevels(): array
     {
         return ConfidenceLevel::cases();
     }

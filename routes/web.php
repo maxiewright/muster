@@ -16,11 +16,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (): Factory|View|RedirectResponse {
     if (! User::query()->where('role', Role::Lead->value)->exists()) {
-        return redirect()->route('setup');
+        return to_route('setup');
     }
 
     if (Auth::check()) {
-        return redirect()->route('dashboard');
+        return to_route('dashboard');
     }
 
     return view('welcome');
@@ -53,7 +53,7 @@ Route::get('/health', function (): JsonResponse {
     return response()->json(['status' => $ok ? 'ok' : 'degraded', 'checks' => $checks], $ok ? 200 : 503);
 })->name('health');
 
-Route::middleware(['auth', 'verified', 'throttle:app'])->group(function () {
+Route::middleware(['auth', 'verified', 'throttle:app'])->group(function (): void {
     Route::livewire('dashboard', 'dashboard')->name('dashboard');
     Route::get('team/invitations', [TeamInvitationController::class, 'index'])->name('team.invitations');
     Route::post('team/invitations', [TeamInvitationController::class, 'store'])->name('team.invitations.store');
@@ -61,7 +61,7 @@ Route::middleware(['auth', 'verified', 'throttle:app'])->group(function () {
 
     // Standup
     Route::livewire('standup', 'standup.standup-board')->name('standups');
-    Route::middleware('throttle:standup-submit')->group(function () {
+    Route::middleware('throttle:standup-submit')->group(function (): void {
         Route::livewire('standup/create', 'standup.standup-form')->name('standup.create');
     });
     Route::livewire('standup/{standup}/edit', 'standup.standup-form')->name('standup.edit');
@@ -74,7 +74,7 @@ Route::middleware(['auth', 'verified', 'throttle:app'])->group(function () {
     Route::livewire('tasks', 'task.task-board')->name('tasks');
 
     // Training & Goals
-    Route::prefix('training')->name('training.')->group(function () {
+    Route::prefix('training')->name('training.')->group(function (): void {
         Route::livewire('/', 'training.training-dashboard')->name('dashboard');
         Route::livewire('/goals/create', 'training.training-goal-form')->name('goals.create');
         Route::livewire('/goals/{goal:slug}/edit', 'training.training-goal-form')->name('goals.edit');
@@ -84,7 +84,7 @@ Route::middleware(['auth', 'verified', 'throttle:app'])->group(function () {
 
 });
 
-Route::middleware(['guest', 'throttle:socialite'])->group(function () {
+Route::middleware(['guest', 'throttle:socialite'])->group(function (): void {
     Route::get('auth/{provider}/redirect', [SocialiteController::class, 'redirect'])
         ->name('socialite.redirect');
 

@@ -105,7 +105,7 @@ new class extends Component
 
             $actor = auth()->user();
             if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
-                TaskStatusChanged::dispatch($task->fresh(['assignee']), $oldStatus, $taskStatus, $actor);
+                event(new \App\Events\TaskStatusChanged($task->fresh(['assignee']), $oldStatus, $taskStatus, $actor));
             }
         }
 

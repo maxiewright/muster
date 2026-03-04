@@ -10,8 +10,8 @@
 
             <aside class="hidden border-r border-zinc-800/70 p-10 lg:flex lg:flex-col">
                 <a href="{{ route('home') }}" class="relative z-20 flex items-center gap-3 text-lg font-medium text-zinc-100" wire:navigate>
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/15 text-emerald-300">
-                        <x-app-logo-icon class="size-6 fill-current" />
+                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/15 p-0.5">
+                        <x-app-logo-icon />
                     </span>
                     {{ config('app.name', 'Muster') }}
                 </a>
@@ -26,7 +26,9 @@
             <main class="flex items-center justify-center px-6 py-10 lg:px-12">
                 <div class="w-full max-w-md rounded-2xl border border-zinc-600/90 bg-zinc-900/95 p-6 shadow-2xl backdrop-blur">
                     <a href="{{ route('home') }}" class="mb-6 flex items-center justify-center gap-2 text-zinc-100 lg:hidden" wire:navigate>
-                        <x-app-logo-icon class="size-8 fill-current" />
+                        <span class="inline-flex h-8 w-8 items-center justify-center">
+                            <x-app-logo-icon />
+                        </span>
                         <span class="font-semibold">{{ config('app.name', 'Muster') }}</span>
                     </a>
                     {{ $slot }}

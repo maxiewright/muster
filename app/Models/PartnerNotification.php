@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PartnerNotification extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'user_id',
         'from_user_id',
@@ -23,11 +24,14 @@ class PartnerNotification extends Model
         'actioned_at',
     ];
 
-    protected $casts = [
-        'data' => 'array',
-        'read_at' => 'datetime',
-        'actioned_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'data' => 'array',
+            'read_at' => 'datetime',
+            'actioned_at' => 'datetime',
+        ];
+    }
 
     // ==========================================
     // RELATIONSHIPS
@@ -52,12 +56,14 @@ class PartnerNotification extends Model
     // SCOPES
     // ==========================================
 
-    public function scopeUnread($query)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function unread($query)
     {
         return $query->whereNull('read_at');
     }
 
-    public function scopePending($query)
+    #[\Illuminate\Database\Eloquent\Attributes\Scope]
+    protected function pending($query)
     {
         return $query->whereNull('actioned_at');
     }

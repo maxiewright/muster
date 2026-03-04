@@ -23,23 +23,22 @@ class TrainingMilestone extends Model
         'status',
         'target_date',
         'completed_at',
-        'verified_at',
-        'verified_by',
         'completion_notes',
         'evidence_url',
         'evidence_files',
-        'points_value',
-        'points_awarded',
     ];
 
-    protected $casts = [
-        'target_date' => 'date',
-        'completed_at' => 'datetime',
-        'verified_at' => 'datetime',
-        'status' => MilestoneStatus::class,
-        'evidence_files' => 'array',
-        'points_awarded' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'target_date' => 'date',
+            'completed_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'status' => MilestoneStatus::class,
+            'evidence_files' => 'array',
+            'points_awarded' => 'boolean',
+        ];
+    }
 
     // ==========================================
     // RELATIONSHIPS
@@ -78,11 +77,10 @@ class TrainingMilestone extends Model
 
     public function verify(User $verifier): void
     {
-        $this->update([
-            'status' => MilestoneStatus::Verified,
-            'verified_at' => now(),
-            'verified_by' => $verifier->id,
-        ]);
+        $this->status = MilestoneStatus::Verified;
+        $this->verified_at = now();
+        $this->verified_by = $verifier->id;
+        $this->save();
 
         $this->goal->recalculateProgress();
     }
@@ -96,10 +94,10 @@ class TrainingMilestone extends Model
         $this->goal->recalculateProgress();
     }
 
-    public function getIsOverdueAttribute(): bool
+    protected function getIsOverdueAttribute(): bool
     {
-        return $this->target_date 
-            && $this->target_date->isPast() 
-            && !in_array($this->status, [MilestoneStatus::Completed, MilestoneStatus::Verified, MilestoneStatus::Skipped]);
+        return $this->target_date
+            && $this->target_date->isPast()
+            && ! in_array($this->status, [MilestoneStatus::Completed, MilestoneStatus::Verified, MilestoneStatus::Skipped]);
     }
 }

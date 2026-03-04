@@ -10,8 +10,8 @@
 
             <header class="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/15 text-emerald-300">
-                        <flux:icon.shield-check class="size-5" />
+                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/15 p-0.5">
+                        <x-app-logo-icon />
                     </span>
                     <div>
                         <p class="text-sm uppercase tracking-[0.22em] text-zinc-400">Muster</p>

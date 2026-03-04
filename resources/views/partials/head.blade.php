@@ -5,13 +5,23 @@
 
 <title>{{ $title ?? config('app.name') }}</title>
 
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
-<link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
-<meta property="og:image" content="/og-image.png">
+@php
+    $faviconIcoVersion = filemtime(public_path('favicon.ico'));
+    $faviconSvgVersion = filemtime(public_path('favicon.svg'));
+    $favicon16Version = filemtime(public_path('favicon-16x16.png'));
+    $favicon32Version = filemtime(public_path('favicon-32x32.png'));
+    $appleTouchIconVersion = filemtime(public_path('apple-touch-icon.png'));
+    $manifestVersion = filemtime(public_path('site.webmanifest'));
+    $openGraphImageVersion = filemtime(public_path('og-image.png'));
+@endphp
+<link rel="icon" href="{{ asset('favicon.ico').'?v='.$faviconIcoVersion }}" sizes="any">
+<link rel="shortcut icon" href="{{ asset('favicon.ico').'?v='.$faviconIcoVersion }}" type="image/x-icon">
+<link rel="icon" href="{{ asset('favicon.svg').'?v='.$faviconSvgVersion }}" type="image/svg+xml">
+<link rel="icon" href="{{ asset('favicon-16x16.png').'?v='.$favicon16Version }}" sizes="16x16" type="image/png">
+<link rel="icon" href="{{ asset('favicon-32x32.png').'?v='.$favicon32Version }}" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png').'?v='.$appleTouchIconVersion }}" sizes="180x180">
+<link rel="manifest" href="{{ asset('site.webmanifest').'?v='.$manifestVersion }}">
+<meta property="og:image" content="{{ asset('og-image.png').'?v='.$openGraphImageVersion }}">
 
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

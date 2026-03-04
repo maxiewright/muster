@@ -14,7 +14,7 @@ class OnboardingSetupController extends Controller
     public function create(): Factory|View|RedirectResponse
     {
         if (User::query()->where('role', Role::Lead->value)->exists()) {
-            return redirect()->route('home');
+            return to_route('home');
         }
 
         return view('onboarding.setup');
@@ -23,7 +23,7 @@ class OnboardingSetupController extends Controller
     public function store(StoreInitialUserRequest $request): RedirectResponse
     {
         if (User::query()->where('role', Role::Lead->value)->exists()) {
-            return redirect()->route('home');
+            return to_route('home');
         }
 
         $user = User::query()->create([
@@ -31,11 +31,13 @@ class OnboardingSetupController extends Controller
             'email' => $request->string('email')->lower()->value(),
             'password' => $request->string('password')->value(),
             'role' => Role::Lead->value,
-            'email_verified_at' => now(),
         ]);
+
+        $user->email_verified_at = now();
+        $user->save();
 
         auth()->login($user, remember: true);
 
-        return redirect()->route('dashboard');
+        return to_route('dashboard');
     }
 }

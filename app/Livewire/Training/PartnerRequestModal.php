@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Livewire\Training;
 
-use App\Models\TrainingGoal;
 use App\Enums\PartnerStatus;
+use App\Models\TrainingGoal;
 use App\Services\TrainingGamificationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -13,6 +13,7 @@ use Livewire\Component;
 class PartnerRequestModal extends Component
 {
     public TrainingGoal $goal;
+
     public string $decline_reason = '';
 
     public function mount(TrainingGoal $goal): void
@@ -22,13 +23,11 @@ class PartnerRequestModal extends Component
 
     public function accept(TrainingGamificationService $gamification): void
     {
-        if ($this->goal->accountability_partner_id !== Auth::id()) {
-            return;
-        }
+        abort_unless($this->goal->accountability_partner_id === Auth::id(), 403);
 
         $this->goal->update(['partner_status' => PartnerStatus::Accepted]);
         $gamification->onGoalActivated($this->goal);
-        
+
         $this->dispatch('closeModal');
         $this->dispatch('partner-request-accepted');
         session()->flash('status', 'Partner request accepted!');
@@ -36,20 +35,18 @@ class PartnerRequestModal extends Component
 
     public function decline(): void
     {
-        if ($this->goal->accountability_partner_id !== Auth::id()) {
-            return;
-        }
+        abort_unless($this->goal->accountability_partner_id === Auth::id(), 403);
 
         $this->goal->update([
             'partner_status' => PartnerStatus::Declined,
-            'partner_decline_reason' => $this->decline_reason
+            'partner_decline_reason' => $this->decline_reason,
         ]);
-        
+
         $this->dispatch('closeModal');
         $this->redirect(route('training.dashboard'));
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('livewire.training.partner-request-modal');
     }

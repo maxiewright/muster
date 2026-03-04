@@ -16,7 +16,7 @@ use Livewire\Component;
 
 new class extends Component
 {
-    public $standup = null;
+    public $standup;
 
     public bool $isEditing = false;
 
@@ -128,13 +128,13 @@ new class extends Component
         // Also include any tasks currently in progress assigned to user
         return Task::query()
             ->where('assigned_to', $user->id)
-            ->where(function ($query) use ($previousPlannedTaskIds) {
+            ->where(function ($query) use ($previousPlannedTaskIds): void {
                 $query->whereIn('status', [TaskStatus::InProgress, TaskStatus::Review])
                     ->orWhereIn('id', $previousPlannedTaskIds);
             })
             ->whereNot('status', TaskStatus::Completed)
             ->get()
-            ->sortBy(fn (Task $task) => match ($task->status) {
+            ->sortBy(fn (Task $task): int => match ($task->status) {
                 TaskStatus::InProgress => 1,
                 TaskStatus::Review => 2,
                 TaskStatus::Todo => 3,
@@ -163,8 +163,7 @@ new class extends Component
             ->whereIn('status', [TaskStatus::Backlog, TaskStatus::Todo])
             ->whereNotIn('id', $excludeIds)
             ->when($search, fn ($query) => $query->where('title', 'like', "%{$search}%"))
-            ->orderBy('priority')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('priority')->latest()
             ->limit(20)
             ->get();
     }
@@ -181,7 +180,7 @@ new class extends Component
     #[Computed]
     public function selectedOngoingTasks()
     {
-        if (empty($this->ongoingTaskIds)) {
+        if ($this->ongoingTaskIds === []) {
             return collect();
         }
 
@@ -193,7 +192,7 @@ new class extends Component
     #[Computed]
     public function selectedPlannedTasks()
     {
-        if (empty($this->plannedTaskIds)) {
+        if ($this->plannedTaskIds === []) {
             return collect();
         }
 
@@ -277,7 +276,7 @@ new class extends Component
 
     protected function moveIdToPosition(array $ids, int $taskId, int $position): array
     {
-        $ids = array_values(array_filter($ids, fn (int $id) => $id !== $taskId));
+        $ids = array_values(array_filter($ids, fn (int $id): bool => $id !== $taskId));
         $position = max(0, min($position, count($ids)));
 
         array_splice($ids, $position, 0, [$taskId]);
@@ -345,7 +344,7 @@ new class extends Component
         $user = Auth::user();
         $isNew = ! $this->isEditing;
 
-        DB::transaction(function () use ($user) {
+        DB::transaction(function () use ($user): void {
             // Create or update standup
             if ($this->isEditing && $this->standup) {
                 $this->standup->update([
@@ -382,7 +381,10 @@ new class extends Component
 
             // Save ongoing (started) tasks
             foreach ($this->ongoingTaskIds as $taskId) {
-                if (in_array($taskId, $this->completedTaskIds) || in_array($taskId, $this->carriedOverTaskIds)) {
+                if (in_array($taskId, $this->completedTaskIds)) {
+                    continue;
+                }
+                if (in_array($taskId, $this->carriedOverTaskIds)) {
                     continue;
                 }
                 $this->attachTaskToStandup($taskId, StandupTaskStatus::Ongoing);
@@ -391,11 +393,15 @@ new class extends Component
 
             // Save planned tasks (not yet started)
             foreach ($this->plannedTaskIds as $taskId) {
-                if (in_array($taskId, $this->completedTaskIds) || in_array($taskId, $this->carriedOverTaskIds)
-                    || in_array($taskId, $this->ongoingTaskIds, true)) {
+                if (in_array($taskId, $this->completedTaskIds)) {
                     continue;
                 }
-
+                if (in_array($taskId, $this->carriedOverTaskIds)) {
+                    continue;
+                }
+                if (in_array($taskId, $this->ongoingTaskIds, true)) {
+                    continue;
+                }
                 $status = in_array($taskId, $this->blockedTaskIds)
                     ? StandupTaskStatus::Blocked
                     : StandupTaskStatus::Planned;
@@ -439,7 +445,7 @@ new class extends Component
         $this->redirectRoute('standups', navigate: true);
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.standup.⚡standup-form.standup-form', [
             'moods' => Mood::cases(),

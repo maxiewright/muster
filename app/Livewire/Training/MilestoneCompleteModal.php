@@ -12,7 +12,9 @@ use Livewire\Component;
 class MilestoneCompleteModal extends Component
 {
     public TrainingMilestone $milestone;
+
     public string $notes = '';
+
     public string $evidence_url = '';
 
     public function mount(TrainingMilestone $milestone): void
@@ -22,19 +24,17 @@ class MilestoneCompleteModal extends Component
 
     public function submit(TrainingGamificationService $gamification): void
     {
-        if ($this->milestone->goal->user_id !== Auth::id()) {
-            return;
-        }
+        abort_unless($this->milestone->goal->user_id === Auth::id(), 403);
 
         $this->milestone->markAsCompleted($this->notes, $this->evidence_url);
         $gamification->onMilestoneCompleted($this->milestone);
-        
+
         $this->dispatch('closeModal');
         $this->dispatch('milestone-completed');
         session()->flash('status', 'Milestone marked as complete!');
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('livewire.training.milestone-complete-modal');
     }

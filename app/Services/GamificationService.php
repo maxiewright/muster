@@ -12,48 +12,54 @@ use App\Models\Badge;
 use App\Models\Standup;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class GamificationService
 {
     public function processCheckin(User $user, Standup $standup): array
     {
-        $pointsEarned = [];
+        return DB::transaction(function () use ($user, $standup): array {
+            // Refresh user with pessimistic lock to prevent concurrent corruption
+            $user = User::query()->lockForUpdate()->findOrFail($user->id);
 
-        // Base check-in points
-        $user->awardPoints(GamificationPoint::Checkin->points(), 'Daily check-in', 'checkin', $standup);
-        $pointsEarned[] = ['points' => GamificationPoint::Checkin->points(), 'reason' => 'Daily check-in'];
+            $pointsEarned = [];
 
-        // Update streak
-        $user->updateStreak();
+            // Base check-in points
+            $user->awardPoints(GamificationPoint::Checkin->points(), 'Daily check-in', 'checkin', $standup);
+            $pointsEarned[] = ['points' => GamificationPoint::Checkin->points(), 'reason' => 'Daily check-in'];
 
-        // Streak bonus
-        if ($user->current_streak > 1) {
-            $streakBonus = min($user->current_streak * GamificationPoint::StreakBonus->points(), 50); // Cap at 50
-            $user->awardPoints($streakBonus, "{$user->current_streak} day streak!", 'streak_bonus', $standup);
-            $pointsEarned[] = ['points' => $streakBonus, 'reason' => "{$user->current_streak} day streak!"];
-        }
+            // Update streak
+            $user->updateStreak();
 
-        // Early bird bonus (before 9 AM)
-        if (now()->hour < 9) {
-            $user->awardPoints(GamificationPoint::EarlyBird->points(), 'Early bird bonus', 'early_bird', $standup);
-            $pointsEarned[] = ['points' => GamificationPoint::EarlyBird->points(), 'reason' => 'Early bird bonus'];
-        }
+            // Streak bonus
+            if ($user->current_streak > 1) {
+                $streakBonus = min($user->current_streak * GamificationPoint::StreakBonus->points(), 50); // Cap at 50
+                $user->awardPoints($streakBonus, "{$user->current_streak} day streak!", 'streak_bonus', $standup);
+                $pointsEarned[] = ['points' => $streakBonus, 'reason' => "{$user->current_streak} day streak!"];
+            }
 
-        // Blocker shared bonus
-        if (! empty($standup->blockers)) {
-            $user->awardPoints(GamificationPoint::BlockerShared->points(), 'Shared a blocker', 'blocker', $standup);
-            $pointsEarned[] = ['points' => GamificationPoint::BlockerShared->points(), 'reason' => 'Shared a blocker'];
-        }
+            // Early bird bonus (before 9 AM)
+            if (now()->hour < 9) {
+                $user->awardPoints(GamificationPoint::EarlyBird->points(), 'Early bird bonus', 'early_bird', $standup);
+                $pointsEarned[] = ['points' => GamificationPoint::EarlyBird->points(), 'reason' => 'Early bird bonus'];
+            }
 
-        $earnedBadges = $this->checkBadges($user);
+            // Blocker shared bonus
+            if (! empty($standup->blockers)) {
+                $user->awardPoints(GamificationPoint::BlockerShared->points(), 'Shared a blocker', 'blocker', $standup);
+                $pointsEarned[] = ['points' => GamificationPoint::BlockerShared->points(), 'reason' => 'Shared a blocker'];
+            }
 
-        broadcast(new StandupCreated($standup))->toOthers();
-        broadcast(new PointsEarned($user->fresh(), array_sum(array_column($pointsEarned, 'points'))))->toOthers();
+            $earnedBadges = $this->checkBadges($user);
 
-        return [
-            'points' => $pointsEarned,
-            'badges' => $earnedBadges,
-        ];
+            broadcast(new StandupCreated($standup))->toOthers();
+            broadcast(new PointsEarned($user->fresh(), array_sum(array_column($pointsEarned, 'points'))))->toOthers();
+
+            return [
+                'points' => $pointsEarned,
+                'badges' => $earnedBadges,
+            ];
+        });
     }
 
     public function checkBadges(User $user): array

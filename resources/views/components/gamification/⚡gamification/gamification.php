@@ -46,7 +46,7 @@ new class extends Component
         return Badge::orderBy('slug')->get();
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.gamification.⚡gamification.gamification');
     }

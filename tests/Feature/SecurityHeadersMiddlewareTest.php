@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Vite;
 test('content security policy header is present when enabled', function (): void {
     config()->set('security.csp_enabled', true);
     config()->set('security.csp_reverb_host', 'reverb.test');
-    config()->set('security.csp_reverb_port', null);
+    config()->set('security.csp_reverb_port');
 
     $response = $this->get(route('home'));
 

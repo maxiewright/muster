@@ -68,8 +68,8 @@ class PartnerNotificationsDropdown extends Component
         unset($this->notifications, $this->unreadCount);
 
         $fromUser = is_string($payload['from_user_name'] ?? null) ? $payload['from_user_name'] : 'Your partner';
-        $goalTitle = is_string($payload['goal_title'] ?? null) ? trim((string) $payload['goal_title']) : '';
-        $summary = is_string($payload['message'] ?? null) ? trim((string) $payload['message']) : '';
+        $goalTitle = is_string($payload['goal_title'] ?? null) ? trim($payload['goal_title']) : '';
+        $summary = is_string($payload['message'] ?? null) ? trim($payload['message']) : '';
 
         $message = $goalTitle !== ''
             ? "{$fromUser} checked in on \"{$goalTitle}\"."
@@ -130,7 +130,7 @@ class PartnerNotificationsDropdown extends Component
         );
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('livewire.training.partner-notifications-dropdown');
     }

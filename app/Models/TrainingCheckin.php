@@ -24,17 +24,15 @@ class TrainingCheckin extends Model
         'next_steps',
         'minutes_logged',
         'confidence_level',
-        'partner_feedback',
-        'feedback_by',
-        'feedback_at',
-        'partner_reaction',
-        'points_earned',
     ];
 
-    protected $casts = [
-        'feedback_at' => 'datetime',
-        'confidence_level' => ConfidenceLevel::class,
-    ];
+    protected function casts(): array
+    {
+        return [
+            'feedback_at' => 'datetime',
+            'confidence_level' => ConfidenceLevel::class,
+        ];
+    }
 
     // ==========================================
     // RELATIONSHIPS
@@ -64,13 +62,13 @@ class TrainingCheckin extends Model
     // COMPUTED
     // ==========================================
 
-    public function getHoursLoggedAttribute(): float
+    protected function getHoursLoggedAttribute(): float
     {
         return round($this->minutes_logged / 60, 1);
     }
 
-    public function getHasFeedbackAttribute(): bool
+    protected function getHasFeedbackAttribute(): bool
     {
-        return !empty($this->partner_feedback);
+        return ! empty($this->partner_feedback);
     }
 }

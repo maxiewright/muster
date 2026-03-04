@@ -64,8 +64,8 @@ class Standup extends Model
     public static function getMoods(): array
     {
         return collect(Mood::cases())
-            ->mapWithKeys(fn (Mood $mood) => [$mood->value => $mood->label()])
-            ->toArray();
+            ->mapWithKeys(fn (Mood $mood): array => [$mood->value => $mood->label()])
+            ->all();
     }
 
     /**

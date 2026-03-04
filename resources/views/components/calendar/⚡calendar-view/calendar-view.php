@@ -72,7 +72,7 @@ new class extends Component
         return \App\Models\Event::with(['user', 'type'])
             ->whereMonth('starts_at', $this->currentMonth->month)
             ->whereYear('starts_at', $this->currentMonth->year)
-            ->orderBy('starts_at')
+            ->oldest('starts_at')
             ->get()
             ->groupBy(fn ($event) => $event->starts_at->format('Y-m-d'));
     }
@@ -94,7 +94,7 @@ new class extends Component
         return $days;
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.calendar.⚡calendar-view.calendar-view');
     }

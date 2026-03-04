@@ -30,7 +30,7 @@ new class extends Component
     public function availableStatuses(): array
     {
         return collect(TaskStatus::cases())
-            ->filter(fn ($status) => $status !== $this->task->status && $status !== TaskStatus::Backlog)
+            ->filter(fn ($status): bool => $status !== $this->task->status && $status !== TaskStatus::Backlog)
             ->values()
             ->all();
     }
@@ -53,7 +53,7 @@ new class extends Component
         $this->dispatchTaskStatusChanged($oldStatus, $newStatus);
 
         if (! $wasCompleted && $newStatus === TaskStatus::Completed) {
-            TaskCompleted::dispatch($this->task->fresh());
+            event(new \App\Events\TaskCompleted($this->task->fresh()));
         }
 
         $this->dispatch('task-updated');
@@ -73,7 +73,7 @@ new class extends Component
         $this->dispatchTaskStatusChanged($oldStatus, $newStatus);
 
         if (! $wasCompleted) {
-            TaskCompleted::dispatch($this->task->fresh());
+            event(new \App\Events\TaskCompleted($this->task->fresh()));
         }
 
         $this->dispatch('task-updated');
@@ -109,10 +109,10 @@ new class extends Component
             return;
         }
 
-        TaskStatusChanged::dispatch($task, $fromStatus, $toStatus, $actor);
+        event(new \App\Events\TaskStatusChanged($task, $fromStatus, $toStatus, $actor));
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.task.⚡task-card.task-card');
     }

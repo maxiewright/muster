@@ -10,13 +10,13 @@ use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     $this->eventType = EventType::factory()->create(['slug' => 'huddle', 'name' => 'Huddle']);
     actingAs($this->user);
 });
 
-it('can navigate to current month', function () {
+it('can navigate to current month', function (): void {
     $component = Livewire::test('calendar.calendar-view');
 
     $component->set('currentMonth', CarbonImmutable::now()->subMonth()->startOfMonth());
@@ -25,7 +25,7 @@ it('can navigate to current month', function () {
         ->assertSet('currentMonth', CarbonImmutable::now()->startOfMonth());
 });
 
-it('can open event for editing', function () {
+it('can open event for editing', function (): void {
     $event = Event::factory()->create([
         'user_id' => $this->user->id,
         'event_type_id' => $this->eventType->id,
@@ -38,7 +38,7 @@ it('can open event for editing', function () {
         ->assertSet('showCreateModal', true);
 });
 
-it('can move event to another day via drag and drop', function () {
+it('can move event to another day via drag and drop', function (): void {
     $event = Event::factory()->create([
         'user_id' => $this->user->id,
         'event_type_id' => $this->eventType->id,
@@ -55,7 +55,7 @@ it('can move event to another day via drag and drop', function () {
     expect($event->starts_at->format('H:i'))->toBe('10:00');
 });
 
-it('can save an existing event in the modal', function () {
+it('can save an existing event in the modal', function (): void {
     $event = Event::factory()->create([
         'user_id' => $this->user->id,
         'event_type_id' => $this->eventType->id,
@@ -70,7 +70,7 @@ it('can save an existing event in the modal', function () {
     expect($event->fresh()->title)->toBe('Updated Title');
 });
 
-it('uses the correct timezone for today', function () {
+it('uses the correct timezone for today', function (): void {
     // Port of Spain is UTC-4
     config(['app.timezone' => 'America/Port_of_Spain']);
 

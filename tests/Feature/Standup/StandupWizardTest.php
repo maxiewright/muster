@@ -13,18 +13,18 @@ use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->user = User::factory()->create();
     actingAs($this->user);
 });
 
-it('renders the standup wizard component', function () {
+it('renders the standup wizard component', function (): void {
     Livewire::test('standup.standup-form')
         ->assertSuccessful()
         ->assertSee('What did you work on yesterday?');
 });
 
-it('shows edit mode when user already has todays standup', function () {
+it('shows edit mode when user already has todays standup', function (): void {
     Standup::create([
         'user_id' => $this->user->id,
         'date' => today(),
@@ -35,7 +35,7 @@ it('shows edit mode when user already has todays standup', function () {
         ->assertSee('Edit Check-in');
 });
 
-it('loads yesterday tasks from previous standup', function () {
+it('loads yesterday tasks from previous standup', function (): void {
     $task = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -60,7 +60,7 @@ it('loads yesterday tasks from previous standup', function () {
         ->assertSee($task->title);
 });
 
-it('allows toggling completed tasks', function () {
+it('allows toggling completed tasks', function (): void {
     $task = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -74,7 +74,7 @@ it('allows toggling completed tasks', function () {
         ->assertSet('completedTaskIds', []);
 });
 
-it('navigates between steps', function () {
+it('navigates between steps', function (): void {
     Livewire::test('standup.standup-form')
         ->assertSet('currentStep', 1)
         ->call('nextStep')
@@ -87,7 +87,7 @@ it('navigates between steps', function () {
         ->assertSet('currentStep', 1);
 });
 
-it('shows backlog tasks in step 2', function () {
+it('shows backlog tasks in step 2', function (): void {
     $task = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -99,7 +99,7 @@ it('shows backlog tasks in step 2', function () {
         ->assertSee($task->title);
 });
 
-it('filters backlog tasks by search', function () {
+it('filters backlog tasks by search', function (): void {
     $task1 = Task::factory()->create([
         'title' => 'Fix authentication bug',
         'assigned_to' => $this->user->id,
@@ -121,7 +121,7 @@ it('filters backlog tasks by search', function () {
         ->assertDontSee($task2->title);
 });
 
-it('creates quick task', function () {
+it('creates quick task', function (): void {
     Livewire::test('standup.standup-form')
         ->call('nextStep')
         ->set('newTaskTitle', 'New urgent task')
@@ -136,7 +136,7 @@ it('creates quick task', function () {
     ]);
 });
 
-it('does not create quick task with empty title', function () {
+it('does not create quick task with empty title', function (): void {
     $initialCount = Task::count();
 
     Livewire::test('standup.standup-form')
@@ -148,7 +148,7 @@ it('does not create quick task with empty title', function () {
     expect(Task::count())->toBe($initialCount);
 });
 
-it('does not create quick task with whitespace-only title', function () {
+it('does not create quick task with whitespace-only title', function (): void {
     $initialCount = Task::count();
 
     Livewire::test('standup.standup-form')
@@ -160,7 +160,7 @@ it('does not create quick task with whitespace-only title', function () {
     expect(Task::count())->toBe($initialCount);
 });
 
-it('toggles planned tasks', function () {
+it('toggles planned tasks', function (): void {
     $task = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -173,7 +173,7 @@ it('toggles planned tasks', function () {
         ->assertSet('plannedTaskIds', [$task->id]);
 });
 
-it('shows summary in step 3', function () {
+it('shows summary in step 3', function (): void {
     $completedTask = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -194,7 +194,7 @@ it('shows summary in step 3', function () {
         ->assertSee('Planned');
 });
 
-it('displays mood selector in step 3', function () {
+it('displays mood selector in step 3', function (): void {
     Livewire::test('standup.standup-form')
         ->call('goToStep', 3)
         ->assertSee('How are you feeling today?')
@@ -203,14 +203,14 @@ it('displays mood selector in step 3', function () {
         ->assertSee(Mood::Struggling->emoji());
 });
 
-it('allows setting mood', function () {
+it('allows setting mood', function (): void {
     Livewire::test('standup.standup-form')
         ->call('goToStep', 3)
         ->set('mood', Mood::Firing->value)
         ->assertSet('mood', Mood::Firing->value);
 });
 
-it('validates blockers max length', function () {
+it('validates blockers max length', function (): void {
     Livewire::test('standup.standup-form')
         ->call('goToStep', 3)
         ->set('blockers', str_repeat('a', 1001))
@@ -218,7 +218,7 @@ it('validates blockers max length', function () {
         ->assertHasErrors('blockers');
 });
 
-it('submits standup successfully', function () {
+it('submits standup successfully', function (): void {
     $completedTask = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -266,7 +266,7 @@ it('submits standup successfully', function () {
     expect($plannedTask->fresh()->status)->toBe(TaskStatus::InProgress);
 });
 
-it('updates task statuses correctly after submission', function () {
+it('updates task statuses correctly after submission', function (): void {
     $completedTask = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -289,7 +289,7 @@ it('updates task statuses correctly after submission', function () {
     expect($plannedTask->fresh()->status)->toBe(TaskStatus::InProgress);
 });
 
-it('handles blocked tasks correctly', function () {
+it('handles blocked tasks correctly', function (): void {
     $blockedTask = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -315,7 +315,7 @@ it('handles blocked tasks correctly', function () {
     expect($blockedTask->fresh()->status)->toBe(TaskStatus::Blocked);
 });
 
-it('can submit standup without tasks', function () {
+it('can submit standup without tasks', function (): void {
     Livewire::test('standup.standup-form')
         ->set('blockers', 'No blockers today')
         ->set('mood', Mood::Firing->value)
@@ -330,10 +330,10 @@ it('can submit standup without tasks', function () {
     ]);
 });
 
-it('can submit standup without blockers and mood', function () {
+it('can submit standup without blockers and mood', function (): void {
     Livewire::test('standup.standup-form')
         ->set('blockers', '')
-        ->set('mood', null)
+        ->set('mood')
         ->call('submitStandup')
         ->assertSee('Check-in Complete!');
 
@@ -345,7 +345,7 @@ it('can submit standup without blockers and mood', function () {
     ]);
 });
 
-it('moves planned task to ongoing when start is clicked', function () {
+it('moves planned task to ongoing when start is clicked', function (): void {
     $task = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,
@@ -361,7 +361,7 @@ it('moves planned task to ongoing when start is clicked', function () {
         ->assertSet('ongoingTaskIds', [$task->id]);
 });
 
-it('persists ongoing tasks on submit', function () {
+it('persists ongoing tasks on submit', function (): void {
     $task = Task::factory()->create([
         'assigned_to' => $this->user->id,
         'created_by' => $this->user->id,

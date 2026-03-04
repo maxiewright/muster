@@ -132,7 +132,7 @@ new class extends Component
         $query = Task::with(['assignee', 'creator', 'subtasks'])
             ->withCount([
                 'subtasks',
-                'subtasks as subtasks_completed_count' => function ($query) {
+                'subtasks as subtasks_completed_count' => function ($query): void {
                     $query->where('status', TaskStatus::Completed);
                 },
                 'standups',
@@ -141,7 +141,7 @@ new class extends Component
             ->latest('updated_at');
 
         // Apply filters
-        if ($this->filterAssignee) {
+        if ($this->filterAssignee !== '' && $this->filterAssignee !== '0') {
             if ($this->filterAssignee === 'unassigned') {
                 $query->whereNull('assigned_to');
             } else {
@@ -149,11 +149,11 @@ new class extends Component
             }
         }
 
-        if ($this->filterPriority) {
+        if ($this->filterPriority !== '' && $this->filterPriority !== '0') {
             $query->where('priority', $this->filterPriority);
         }
 
-        if ($this->filterStatus) {
+        if ($this->filterStatus !== '' && $this->filterStatus !== '0') {
             $query->where('status', $this->filterStatus);
         }
 
@@ -175,7 +175,7 @@ new class extends Component
             ->where('assigned_to', auth()->id())
             ->whereNot('status', TaskStatus::Completed)
             ->orderBy('priority')
-            ->orderBy('due_date')
+            ->oldest('due_date')
             ->get();
     }
 
@@ -224,25 +224,25 @@ new class extends Component
 
     public function sortTaskToTodo(mixed $taskId, mixed $position): void
     {
-        $this->sortTaskToStatus($taskId, $position, TaskStatus::Todo);
+        $this->sortTaskToStatus($taskId, TaskStatus::Todo);
     }
 
     public function sortTaskToInProgress(mixed $taskId, mixed $position): void
     {
-        $this->sortTaskToStatus($taskId, $position, TaskStatus::InProgress);
+        $this->sortTaskToStatus($taskId, TaskStatus::InProgress);
     }
 
     public function sortTaskToReview(mixed $taskId, mixed $position): void
     {
-        $this->sortTaskToStatus($taskId, $position, TaskStatus::Review);
+        $this->sortTaskToStatus($taskId, TaskStatus::Review);
     }
 
     public function sortTaskToCompleted(mixed $taskId, mixed $position): void
     {
-        $this->sortTaskToStatus($taskId, $position, TaskStatus::Completed);
+        $this->sortTaskToStatus($taskId, TaskStatus::Completed);
     }
 
-    private function sortTaskToStatus(mixed $taskId, mixed $position, TaskStatus $targetStatus): void
+    private function sortTaskToStatus(mixed $taskId, TaskStatus $targetStatus): void
     {
         DB::transaction(function () use ($taskId, $targetStatus): void {
             $task = Task::query()->lockForUpdate()->find($taskId);
@@ -251,7 +251,6 @@ new class extends Component
                 return;
             }
 
-            /** @var \App\Models\User $user */
             if (! $task->canBeEditedBy(auth()->user())) {
                 return;
             }
@@ -261,18 +260,18 @@ new class extends Component
             $task->update(['status' => $targetStatus]);
             $actor = auth()->user();
             if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
-                TaskStatusChanged::dispatch($task->fresh(['assignee']), $oldStatus, $targetStatus, $actor);
+                event(new \App\Events\TaskStatusChanged($task->fresh(['assignee']), $oldStatus, $targetStatus, $actor));
             }
 
             if (! $wasCompleted && $targetStatus === TaskStatus::Completed) {
-                TaskCompleted::dispatch($task->fresh());
+                event(new \App\Events\TaskCompleted($task->fresh()));
             }
         });
 
         unset($this->tasks);
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.task.⚡task-board.task-board');
     }

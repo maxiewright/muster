@@ -10,6 +10,10 @@ test('login screen can be rendered', function (): void {
     $response = $this->get(route('login'));
 
     $response->assertOk()
+        ->assertSee(asset('favicon.ico').'?v=', false)
+        ->assertSee(asset('favicon.svg').'?v=', false)
+        ->assertSee(asset('site.webmanifest').'?v=', false)
+        ->assertSee('src="'.asset('logo.svg').'"', false)
         ->assertSee('Continue with GitHub')
         ->assertSee('Continue with Google');
 });

@@ -68,11 +68,11 @@ class TeamInvitationController extends Controller
     public function showAcceptForm(TeamInvitation $invitation): Factory|View|RedirectResponse
     {
         if ($invitation->hasBeenAccepted()) {
-            return redirect()->route('login')->withErrors(['email' => 'This invitation was already used.']);
+            return to_route('login')->withErrors(['email' => 'This invitation was already used.']);
         }
 
         if ($invitation->hasExpired()) {
-            return redirect()->route('login')->withErrors(['email' => 'This invitation has expired.']);
+            return to_route('login')->withErrors(['email' => 'This invitation has expired.']);
         }
 
         return view('team.invitations.accept', [
@@ -83,11 +83,11 @@ class TeamInvitationController extends Controller
     public function accept(AcceptTeamInvitationRequest $request, TeamInvitation $invitation): RedirectResponse
     {
         if ($invitation->hasBeenAccepted()) {
-            return redirect()->route('login')->withErrors(['email' => 'This invitation was already used.']);
+            return to_route('login')->withErrors(['email' => 'This invitation was already used.']);
         }
 
         if ($invitation->hasExpired()) {
-            return redirect()->route('login')->withErrors(['email' => 'This invitation has expired.']);
+            return to_route('login')->withErrors(['email' => 'This invitation has expired.']);
         }
 
         $user = User::query()->firstOrCreate(
@@ -96,7 +96,6 @@ class TeamInvitationController extends Controller
                 'name' => $request->string('name')->value(),
                 'password' => $request->string('password')->value(),
                 'role' => $invitation->role,
-                'email_verified_at' => now(),
             ],
         );
 
@@ -108,6 +107,6 @@ class TeamInvitationController extends Controller
 
         auth()->login($user, remember: true);
 
-        return redirect()->route('dashboard');
+        return to_route('dashboard');
     }
 }

@@ -48,9 +48,9 @@ test('TaskCreated is broadcast when task is created', function (): void {
     $user = User::factory()->create();
     $task = Task::factory()->create(['created_by' => $user->id, 'title' => 'New Task']);
 
-    TaskCreated::dispatch($task);
+    event(new \App\Events\TaskCreated($task));
 
-    \Illuminate\Support\Facades\Event::assertDispatched(TaskCreated::class, function (TaskCreated $event) {
+    \Illuminate\Support\Facades\Event::assertDispatched(TaskCreated::class, function (TaskCreated $event): bool {
         $channels = $event->broadcastOn();
 
         return count($channels) === 1 && $channels[0]->name === 'private-team';
@@ -86,9 +86,9 @@ test('TaskCompleted is broadcast when task is completed', function (): void {
         'title' => 'Complete Me',
     ]);
 
-    TaskCompleted::dispatch($task->fresh());
+    event(new \App\Events\TaskCompleted($task->fresh()));
 
-    \Illuminate\Support\Facades\Event::assertDispatched(TaskCompleted::class, function (TaskCompleted $event) {
+    \Illuminate\Support\Facades\Event::assertDispatched(TaskCompleted::class, function (TaskCompleted $event): bool {
         $channels = $event->broadcastOn();
 
         return count($channels) === 1 && $channels[0]->name === 'private-team';

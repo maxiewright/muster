@@ -49,11 +49,7 @@ new class extends Component
             return;
         }
 
-        if ($selectedDate) {
-            $this->starts_at = $selectedDate.'T09:00';
-        } else {
-            $this->starts_at = now()->format('Y-m-d\TH:i');
-        }
+        $this->starts_at = $selectedDate ? $selectedDate.'T09:00' : now()->format('Y-m-d\TH:i');
 
         $this->ends_at = CarbonImmutable::parse($this->starts_at)
             ->addHour()
@@ -117,7 +113,7 @@ new class extends Component
         return \App\Models\User::orderBy('name')->get();
     }
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
     {
         return view('components.calendar.⚡create-event-modal.create-event-modal');
     }

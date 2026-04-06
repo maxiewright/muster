@@ -5,7 +5,7 @@
         <x-auth-session-status class="text-center" :status="session('status')" />
 
         @if ($errors->has('socialite'))
-            <div class="rounded-lg border border-red-300/40 bg-red-500/10 p-3 text-sm text-red-300">
+            <div class="rounded-lg border border-red-300/40 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">
                 {{ $errors->first('socialite') }}
             </div>
         @endif
@@ -20,7 +20,7 @@
         @if($socialProviders->isNotEmpty())
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 @foreach($socialProviders as $provider)
-                    <a href="{{ $provider['route'] }}" class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-sm font-medium text-zinc-100 transition hover:border-zinc-500 hover:bg-zinc-700">
+                    <a href="{{ $provider['route'] }}" class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-zinc-500 dark:hover:bg-zinc-700">
                         <flux:icon :icon="$provider['icon']" class="size-4" />
                         Continue with {{ $provider['name'] }}
                     </a>
@@ -29,10 +29,10 @@
 
             <div class="relative">
                 <div class="absolute inset-0 flex items-center">
-                    <span class="w-full border-t border-zinc-700"></span>
+                    <span class="w-full border-t border-slate-300 dark:border-zinc-700"></span>
                 </div>
                 <div class="relative flex justify-center text-xs uppercase">
-                    <span class="bg-zinc-900 px-2 text-zinc-400">or use email</span>
+                    <span class="bg-white px-2 text-slate-400 dark:bg-zinc-900 dark:text-zinc-400">or use email</span>
                 </div>
             </div>
         @endif
@@ -63,13 +63,13 @@
                 />
 
                 @if (Route::has('password.request'))
-                    <flux:link class="absolute end-0 top-0 text-sm !text-zinc-300 hover:!text-zinc-100" :href="route('password.request')" wire:navigate>
+                    <flux:link class="absolute end-0 top-0 text-sm !text-slate-500 hover:!text-slate-700 dark:!text-zinc-300 dark:hover:!text-zinc-100" :href="route('password.request')" wire:navigate>
                         {{ __('Forgot your password?') }}
                     </flux:link>
                 @endif
             </div>
 
-            <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" class="text-zinc-200" />
+            <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" class="text-slate-700 dark:text-zinc-200" />
 
             <div class="flex items-center justify-end">
                 <flux:button variant="primary" type="submit" class="w-full min-h-[44px] !bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600" data-test="login-button">

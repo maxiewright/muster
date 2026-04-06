@@ -1,10 +1,10 @@
 <x-layouts::app>
     <div class="space-y-6">
-        <flux:card class="relative overflow-hidden border-zinc-200/70 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 text-zinc-100 dark:border-zinc-700">
+        <flux:card class="relative overflow-hidden border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-slate-50 text-slate-900 dark:border-zinc-700 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800 dark:text-zinc-100">
             <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.28),transparent_45%)]"></div>
             <div class="relative">
-                <flux:heading level="1" size="xl" class="!text-zinc-50">Team Invitations</flux:heading>
-                <flux:text class="mt-2 !text-zinc-300">Invite teammates by email. Access is invite-only.</flux:text>
+                <flux:heading level="1" size="xl" class="!text-slate-900 dark:!text-zinc-50">Team Invitations</flux:heading>
+                <flux:text class="mt-2 !text-slate-600 dark:!text-zinc-300">Invite teammates by email. Access is invite-only.</flux:text>
             </div>
         </flux:card>
 

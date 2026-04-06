@@ -1,11 +1,6 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 
-@source '../views';
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
-@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
-
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -75,3 +70,127 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* === Muster HUD Tactical Utilities === */
+
+/* ---- Body-level overlays via pseudo-elements ---- */
+body.tactical-bg {
+    position: relative;
+    /* Smooth background transitions for theme switching */
+    transition: background-color 0.5s ease;
+}
+
+body.tactical-bg::before,
+body.tactical-bg::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, background 0.5s ease;
+}
+
+body.tactical-bg::before { z-index: -20; }
+body.tactical-bg::after { z-index: -10; }
+
+/* -- Dark Mode Tactical Background -- */
+.dark body.tactical-bg::before {
+    background:
+        radial-gradient(circle at 20% 20%, rgba(16,185,129,0.2), transparent 30%),
+        radial-gradient(circle at 80% 0%, rgba(245,158,11,0.16), transparent 32%),
+        linear-gradient(180deg, #09090b 0%, #18181b 50%, #09090b 100%);
+}
+
+.dark body.tactical-bg::after {
+    background-image:
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+}
+
+/* -- Light Mode "Daylight Ops" Background -- */
+:where(:not(.dark)) body.tactical-bg::before {
+    background:
+        radial-gradient(circle at 10% 20%, rgba(56,189,248,0.15), transparent 40%),
+        radial-gradient(circle at 90% 10%, rgba(16,185,129,0.12), transparent 40%),
+        linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+:where(:not(.dark)) body.tactical-bg::after {
+    background-image:
+        linear-gradient(rgba(148,163,184,0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148,163,184,0.12) 1px, transparent 1px);
+    background-size: 48px 48px;
+}
+
+/* ---- Global: Glassmorphic Flux & Manual Cards ---- */
+.glass-card, [data-flux-card] {
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Dark Glass */
+.dark .glass-card, .dark [data-flux-card] {
+    background: rgba(255,255,255,0.05) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    border-radius: 0.75rem;
+    box-shadow: none !important;
+}
+
+/* Light Glass (Frosted "Arctic" Look) */
+:where(:not(.dark)) .glass-card, :where(:not(.dark)) [data-flux-card] {
+    background: rgba(255,255,255,0.78) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(148,163,184,0.22) !important;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04) !important;
+}
+
+/* ---- Navigation legibility: sidebar text contrast ---- */
+/* Dark text styles */
+.dark [data-flux-sidebar-item] { color: var(--color-zinc-200); }
+.dark [data-flux-sidebar-item]:where([data-current]) { color: var(--color-emerald-400); background-color: rgba(255, 255, 255, 0.05) !important; }
+.dark [data-flux-sidebar-group-heading] { color: var(--color-zinc-400); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.08em; }
+
+/* Light text styles */
+:where(:not(.dark)) [data-flux-sidebar-item] { color: var(--color-slate-600); }
+:where(:not(.dark)) [data-flux-sidebar-item]:where([data-current]) { color: var(--color-emerald-700); background-color: rgba(16, 185, 129, 0.08) !important; font-weight: 500;}
+:where(:not(.dark)) [data-flux-sidebar-group-heading] { color: var(--color-slate-400); text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.08em; font-weight: 600; }
+
+
+/* ---- XP bar fill animation ---- */
+@keyframes xp-fill {
+    from { width: 0; }
+}
+
+/* ---- Pulsing glow for live indicators ---- */
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
+    50% { opacity: 0.5; box-shadow: 0 0 8px currentColor; }
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ---- Tactical hover glow on glass cards ---- */
+.tactical-glow {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.dark .tactical-glow:hover {
+    border-color: rgba(16,185,129,0.3) !important;
+    box-shadow: 0 0 20px rgba(16,185,129,0.08), inset 0 0 20px rgba(16,185,129,0.03) !important;
+}
+
+:where(:not(.dark)) .tactical-glow:hover {
+    border-color: rgba(16,185,129,0.4) !important;
+    box-shadow: 0 8px 20px rgba(16,185,129,0.08), inset 0 0 0 1px rgba(16,185,129,0.1) !important;
+    transform: translateY(-1px);
+}
+
+/* ---- Mobile bottom nav safe area ---- */
+.pb-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}

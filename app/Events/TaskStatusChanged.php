@@ -7,6 +7,7 @@ namespace App\Events;
 use App\Enums\TaskStatus;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -29,7 +30,7 @@ class TaskStatusChanged implements ShouldBroadcast, ShouldQueue
     }
 
     /**
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): array
     {

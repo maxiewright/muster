@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\TrainingGamificationPoint;
 
 it('has correct number of cases', function (): void {

@@ -20,6 +20,7 @@ class TrainingGoalShow extends Component
     public function mount(TrainingGoal $goal): void
     {
         $this->goal = $goal->load(['user', 'partner', 'milestones', 'checkins.user', 'checkins.feedbackProvider']);
+        abort_unless($this->goal->belongsToUserContext(Auth::user()), 403);
 
         // Enforce visibility: private goals are only accessible by the owner or accepted partner.
         if (! $this->goal->is_public) {
@@ -31,7 +32,9 @@ class TrainingGoalShow extends Component
 
         // Mark notifications as read for the owner or partner.
         if (Auth::id() === $this->goal->user_id || Auth::id() === $this->goal->accountability_partner_id) {
-            PartnerNotification::where('training_goal_id', $this->goal->id)
+            PartnerNotification::query()
+                ->inUnit(Auth::user()->activeUnitId())
+                ->where('training_goal_id', $this->goal->id)
                 ->where('user_id', Auth::id())
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
@@ -92,6 +95,7 @@ class TrainingGoalShow extends Component
     public function acceptPartnerRequest(TrainingGamificationService $gamification): void
     {
         // Re-check that the current user is still the partner on this goal in the DB.
+        abort_unless($this->goal->fresh()?->belongsToUserContext(Auth::user()), 403);
         abort_unless($this->goal->fresh()->accountability_partner_id === Auth::id(), 403);
 
         $this->goal->update(['partner_status' => PartnerStatus::Accepted]);
@@ -104,6 +108,7 @@ class TrainingGoalShow extends Component
     public function declinePartnerRequest(?string $reason = null): void
     {
         // Re-check that the current user is still the partner on this goal in the DB.
+        abort_unless($this->goal->fresh()?->belongsToUserContext(Auth::user()), 403);
         abort_unless($this->goal->fresh()->accountability_partner_id === Auth::id(), 403);
 
         $this->goal->update([

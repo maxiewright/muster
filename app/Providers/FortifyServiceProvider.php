@@ -1,10 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -45,12 +51,14 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.login'));
-        Fortify::verifyEmailView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.verify-email'));
-        Fortify::twoFactorChallengeView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.two-factor-challenge'));
-        Fortify::confirmPasswordView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.confirm-password'));
-        Fortify::resetPasswordView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.reset-password'));
-        Fortify::requestPasswordResetLinkView(fn (): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View => view('livewire.auth.forgot-password'));
+        Fortify::loginView(fn (): Factory|View|RedirectResponse => $this->platformIsConfigured()
+            ? view('livewire.auth.login')
+            : to_route('system.setup'));
+        Fortify::verifyEmailView(fn (): Factory|View|RedirectResponse => view('livewire.auth.verify-email'));
+        Fortify::twoFactorChallengeView(fn (): Factory|View|RedirectResponse => view('livewire.auth.two-factor-challenge'));
+        Fortify::confirmPasswordView(fn (): Factory|View|RedirectResponse => view('livewire.auth.confirm-password'));
+        Fortify::resetPasswordView(fn (): Factory|View|RedirectResponse => view('livewire.auth.reset-password'));
+        Fortify::requestPasswordResetLinkView(fn (): Factory|View|RedirectResponse => view('livewire.auth.forgot-password'));
     }
 
     /**
@@ -67,5 +75,10 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($throttleKey);
         });
+    }
+
+    private function platformIsConfigured(): bool
+    {
+        return User::query()->where('is_platform_admin', true)->exists();
     }
 }

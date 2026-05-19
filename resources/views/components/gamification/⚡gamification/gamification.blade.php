@@ -74,8 +74,8 @@
                     <div class="py-8 text-center">
                         <span class="text-4xl mb-2 block opacity-50">🎖️</span>
                         <flux:text variant="subtle">No badges yet. Check in daily to earn your first!</flux:text>
-                        <flux:button href="{{ route('standup.create') }}" variant="primary" size="sm" class="mt-3" wire:navigate>
-                            Check In Now
+                        <flux:button href="{{ route('muster.create') }}" variant="primary" size="sm" class="mt-3" wire:navigate>
+                            Start Muster
                         </flux:button>
                     </div>
                 @endif

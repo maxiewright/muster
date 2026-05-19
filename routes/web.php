@@ -1,9 +1,15 @@
 <?php
 
-use App\Enums\Role;
+use App\Http\Controllers\ActiveUnitController;
+use App\Http\Controllers\MissionController;
 use App\Http\Controllers\OnboardingSetupController;
+use App\Http\Controllers\SystemSetupController;
 use App\Http\Controllers\TeamInvitationController;
+use App\Http\Controllers\UnitController;
+use App\Http\Middleware\EnsureActiveUnitContext;
 use App\Http\SocialiteController;
+use App\Livewire\Muster\MusterBoard;
+use App\Livewire\Muster\MusterForm;
 use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -15,20 +21,27 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (): Factory|View|RedirectResponse {
-    if (! User::query()->where('role', Role::Lead->value)->exists()) {
-        return to_route('setup');
+    if (! User::query()->where('is_platform_admin', true)->exists()) {
+        return to_route('system.setup');
     }
 
     if (Auth::check()) {
+        if (Auth::user()?->isPlatformAdmin()) {
+            return to_route('filament.admin.pages.dashboard');
+        }
+
         return to_route('dashboard');
     }
 
     return view('welcome');
 })->name('home');
 
+Route::get('/system/setup', [SystemSetupController::class, 'create'])->name('system.setup');
+Route::post('/system/setup', [SystemSetupController::class, 'store'])->name('system.setup.store');
+
 Route::middleware('guest')->group(function (): void {
-    Route::get('/setup', [OnboardingSetupController::class, 'create'])->name('setup');
-    Route::post('/setup', [OnboardingSetupController::class, 'store'])->name('setup.store');
+    Route::get('/setup/{invitation:token}', [OnboardingSetupController::class, 'create'])->name('setup');
+    Route::post('/setup/{invitation:token}', [OnboardingSetupController::class, 'store'])->name('setup.store');
 });
 
 Route::middleware(['guest', 'throttle:invites'])->group(function (): void {
@@ -36,7 +49,7 @@ Route::middleware(['guest', 'throttle:invites'])->group(function (): void {
     Route::post('/invites/{invitation:token}', [TeamInvitationController::class, 'accept'])->name('invites.accept.store');
 });
 
-Route::get('/health', function (): JsonResponse {
+Route::middleware('throttle:health')->get('/health', function (): JsonResponse {
     $checks = ['database' => false, 'cache' => false];
     try {
         DB::connection()->getPdo();
@@ -53,18 +66,25 @@ Route::get('/health', function (): JsonResponse {
     return response()->json(['status' => $ok ? 'ok' : 'degraded', 'checks' => $checks], $ok ? 200 : 503);
 })->name('health');
 
-Route::middleware(['auth', 'verified', 'throttle:app'])->group(function (): void {
+Route::middleware(['auth', 'verified', 'throttle:app', EnsureActiveUnitContext::class])->group(function (): void {
+    Route::post('units/active', ActiveUnitController::class)->name('units.active');
     Route::livewire('dashboard', 'dashboard')->name('dashboard');
-    Route::get('team/invitations', [TeamInvitationController::class, 'index'])->name('team.invitations');
-    Route::post('team/invitations', [TeamInvitationController::class, 'store'])->name('team.invitations.store');
+    Route::get('missions', [MissionController::class, 'index'])->name('missions.index');
+    Route::post('missions', [MissionController::class, 'store'])->name('missions.store');
+    Route::prefix('team')->name('team.')->group(function (): void {
+        Route::get('units', [UnitController::class, 'index'])->name('units.index');
+        Route::post('units', [UnitController::class, 'store'])->name('units.store');
+        Route::get('invitations', [TeamInvitationController::class, 'index'])->name('invitations');
+        Route::post('invitations', [TeamInvitationController::class, 'store'])->name('invitations.store');
+    });
     Route::livewire('achievements', 'gamification.gamification')->name('gamification');
 
-    // Standup
-    Route::livewire('standup', 'standup.standup-board')->name('standups');
-    Route::middleware('throttle:standup-submit')->group(function (): void {
-        Route::livewire('standup/create', 'standup.standup-form')->name('standup.create');
+    // Muster
+    Route::livewire('musters', MusterBoard::class)->name('musters');
+    Route::middleware('throttle:muster-submit')->group(function (): void {
+        Route::livewire('musters/create', MusterForm::class)->name('muster.create');
     });
-    Route::livewire('standup/{standup}/edit', 'standup.standup-form')->name('standup.edit');
+    Route::livewire('musters/{muster}/edit', MusterForm::class)->name('muster.edit');
 
     // Calendar
     Route::livewire('calendar', 'calendar.calendar-view')->name('calendar');
@@ -76,6 +96,7 @@ Route::middleware(['auth', 'verified', 'throttle:app'])->group(function (): void
     // Training & Goals
     Route::prefix('training')->name('training.')->group(function (): void {
         Route::livewire('/', 'training.training-dashboard')->name('dashboard');
+        Route::livewire('/assignments', 'training.training-assignment-manager')->name('assignments');
         Route::livewire('/goals/create', 'training.training-goal-form')->name('goals.create');
         Route::livewire('/goals/{goal:slug}/edit', 'training.training-goal-form')->name('goals.edit');
         Route::livewire('/goals/{goal:slug}', 'training.training-goal-show')->name('goals.show');

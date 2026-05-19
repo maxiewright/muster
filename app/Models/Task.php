@@ -24,7 +24,11 @@ class Task extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'organization_id',
+        'unit_id',
+        'mission_id',
         'assigned_to',
+        'action_lead_user_id',
         'created_by',
         'parent_id',
         'title',
@@ -50,9 +54,29 @@ class Task extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function mission(): BelongsTo
+    {
+        return $this->belongsTo(Mission::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function actionLead(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'action_lead_user_id');
     }
 
     public function parent(): BelongsTo
@@ -80,16 +104,22 @@ class Task extends Model
         return $this->subtasks()->count();
     }
 
-    public function standups(): BelongsToMany
+    public function musters(): BelongsToMany
     {
-        return $this->belongsToMany(Standup::class, 'standup_task')
+        return $this->belongsToMany(Muster::class, 'muster_task', 'task_id', 'muster_id')
             ->withPivot('status', 'notes')
             ->withTimestamps();
     }
 
-    public function standupTasks(): HasMany
+    public function musterTasks(): HasMany
     {
-        return $this->hasMany(StandUpTask::class, 'task_id');
+        return $this->hasMany(MusterTask::class, 'task_id');
+    }
+
+    public function assignedMembers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_assignments')
+            ->withTimestamps();
     }
 
     // Scopes
@@ -171,11 +201,21 @@ class Task extends Model
 
     public function isAssignedTo(User $user): bool
     {
-        return $this->assigned_to === $user->id;
+        if ($this->assigned_to === $user->id || $this->action_lead_user_id === $user->id) {
+            return true;
+        }
+
+        return $this->assignedMembers()->whereKey($user->id)->exists();
     }
 
     public function canBeEditedBy(User $user): bool
     {
+        $activeUnitId = $user->activeUnitId();
+
+        if ($activeUnitId !== null && $this->unit_id !== $activeUnitId) {
+            return false;
+        }
+
         if ($user->isLead()) {
             return true;
         }
@@ -184,6 +224,14 @@ class Task extends Model
         }
 
         return $this->assigned_to === $user->id;
+    }
+
+    #[Scope]
+    protected function inUnit(Builder $query, ?int $unitId): void
+    {
+        if ($unitId !== null) {
+            $query->where('unit_id', $unitId);
+        }
     }
 
     public function getSlugOptions(): SlugOptions

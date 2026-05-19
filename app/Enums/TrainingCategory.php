@@ -17,7 +17,7 @@ enum TrainingCategory: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Technical => 'Technical Skill',
             self::Framework => 'Framework/Library',
             self::Language => 'Programming Language',
@@ -31,7 +31,7 @@ enum TrainingCategory: string
 
     public function icon(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Technical => '⚙️',
             self::Framework => '🏗️',
             self::Language => '💻',

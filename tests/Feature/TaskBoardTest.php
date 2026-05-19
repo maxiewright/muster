@@ -2,17 +2,37 @@
 
 declare(strict_types=1);
 
+use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Events\TaskAssigned;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskStatusChanged;
+use App\Models\Organization;
 use App\Models\Task;
+use App\Models\Unit;
+use App\Models\UnitMembership;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
+
+function attachTaskBoardUserToUnit(User $user, Organization $organization, Unit $unit, string $role = 'member'): void
+{
+    $user->forceFill(['organization_id' => $organization->id])->save();
+
+    UnitMembership::query()->updateOrCreate(
+        [
+            'user_id' => $user->id,
+            'unit_id' => $unit->id,
+        ],
+        [
+            'role' => $role,
+        ],
+    );
+}
 
 test('guests cannot visit tasks page', function (): void {
     $response = $this->get(route('tasks'));
@@ -43,14 +63,14 @@ test('task board displays tasks grouped by status', function (): void {
 })->skip('Blade/Flux compile quirk in task-card view under test env');
 
 test('TaskCreated is broadcast when task is created', function (): void {
-    \Illuminate\Support\Facades\Event::fake([TaskCreated::class]);
+    Event::fake([TaskCreated::class]);
 
     $user = User::factory()->create();
     $task = Task::factory()->create(['created_by' => $user->id, 'title' => 'New Task']);
 
-    event(new \App\Events\TaskCreated($task));
+    event(new TaskCreated($task));
 
-    \Illuminate\Support\Facades\Event::assertDispatched(TaskCreated::class, function (TaskCreated $event): bool {
+    Event::assertDispatched(TaskCreated::class, function (TaskCreated $event): bool {
         $channels = $event->broadcastOn();
 
         return count($channels) === 1 && $channels[0]->name === 'private-team';
@@ -58,7 +78,7 @@ test('TaskCreated is broadcast when task is created', function (): void {
 });
 
 test('TaskAssigned is broadcast when task is created for another user', function (): void {
-    \Illuminate\Support\Facades\Event::fake([TaskAssigned::class]);
+    Event::fake([TaskAssigned::class]);
 
     $creator = User::factory()->lead()->create();
     $assignee = User::factory()->create();
@@ -67,11 +87,11 @@ test('TaskAssigned is broadcast when task is created for another user', function
         ->test('task.create-task-modal')
         ->set('title', 'Assigned task')
         ->set('status', TaskStatus::Todo->value)
-        ->set('priority', \App\Enums\TaskPriority::Medium->value)
+        ->set('priority', TaskPriority::Medium->value)
         ->set('assigned_to', $assignee->id)
         ->call('save');
 
-    \Illuminate\Support\Facades\Event::assertDispatched(TaskAssigned::class, function (TaskAssigned $event) use ($assignee): bool {
+    Event::assertDispatched(TaskAssigned::class, function (TaskAssigned $event) use ($assignee): bool {
         $channels = $event->broadcastOn();
 
         return count($channels) === 1 && $channels[0]->name === "private-App.Models.User.{$assignee->id}";
@@ -79,16 +99,16 @@ test('TaskAssigned is broadcast when task is created for another user', function
 });
 
 test('TaskCompleted is broadcast when task is completed', function (): void {
-    \Illuminate\Support\Facades\Event::fake([TaskCompleted::class]);
+    Event::fake([TaskCompleted::class]);
 
     $task = Task::factory()->create([
         'status' => TaskStatus::InProgress,
         'title' => 'Complete Me',
     ]);
 
-    event(new \App\Events\TaskCompleted($task->fresh()));
+    event(new TaskCompleted($task->fresh()));
 
-    \Illuminate\Support\Facades\Event::assertDispatched(TaskCompleted::class, function (TaskCompleted $event): bool {
+    Event::assertDispatched(TaskCompleted::class, function (TaskCompleted $event): bool {
         $channels = $event->broadcastOn();
 
         return count($channels) === 1 && $channels[0]->name === 'private-team';
@@ -109,6 +129,59 @@ test('task board sortTaskToStatus updates task status when dropping from another
         ->call('sortTaskToInProgress', $todoTask->id, 0);
 
     expect($todoTask->fresh()->status)->toBe(TaskStatus::InProgress);
+});
+
+test('task board only loads tasks from the active unit', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
+    $otherUnit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Bravo', 'slug' => 'bravo']);
+    $user = User::factory()->create();
+    attachTaskBoardUserToUnit($user, $organization, $unit);
+    attachTaskBoardUserToUnit($user, $organization, $otherUnit);
+
+    $visibleTask = Task::factory()->create([
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
+        'created_by' => $user->id,
+        'assigned_to' => $user->id,
+        'title' => 'Visible Task',
+    ]);
+
+    Task::factory()->create([
+        'organization_id' => $organization->id,
+        'unit_id' => $otherUnit->id,
+        'created_by' => $user->id,
+        'assigned_to' => $user->id,
+        'title' => 'Hidden Task',
+    ]);
+
+    $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
+
+    $tasks = Livewire::test('task.task-board')->get('tasks');
+
+    expect($tasks->pluck('id')->all())->toBe([$visibleTask->id]);
+});
+
+test('task creation stamps the active unit context', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
+    $user = User::factory()->create();
+    attachTaskBoardUserToUnit($user, $organization, $unit, 'owner');
+
+    $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
+
+    Livewire::test('task.create-task-modal')
+        ->set('title', 'Unit scoped task')
+        ->set('status', TaskStatus::Todo->value)
+        ->set('priority', TaskPriority::Medium->value)
+        ->call('save')
+        ->assertDispatched('task-saved');
+
+    $task = Task::query()->where('title', 'Unit scoped task')->first();
+
+    expect($task)->not->toBeNull();
+    expect($task?->organization_id)->toBe($organization->id);
+    expect($task?->unit_id)->toBe($unit->id);
 });
 
 test('task board handleTaskMoved runs and component re-renders', function (): void {
@@ -160,7 +233,7 @@ test('task card startTask moves Todo to InProgress', function (): void {
 });
 
 test('task creator receives status change broadcast when assignee updates task', function (): void {
-    \Illuminate\Support\Facades\Event::fake([TaskStatusChanged::class]);
+    Event::fake([TaskStatusChanged::class]);
 
     $creator = User::factory()->create();
     $assignee = User::factory()->create();
@@ -175,7 +248,7 @@ test('task creator receives status change broadcast when assignee updates task',
         ->test('task.task-card', ['task' => $task])
         ->call('startTask');
 
-    \Illuminate\Support\Facades\Event::assertDispatched(TaskStatusChanged::class, function (TaskStatusChanged $event) use ($creator): bool {
+    Event::assertDispatched(TaskStatusChanged::class, function (TaskStatusChanged $event) use ($creator): bool {
         $channels = $event->broadcastOn();
 
         return count($channels) === 1

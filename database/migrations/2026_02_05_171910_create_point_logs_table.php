@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('points'); // can be negative for deductions
             $table->string('reason');
             $table->string('type'); // checkin, streak_bonus, badge, huddle, help
-            $table->nullableMorphs('related'); // polymorphic relation to standup, event, etc.
+            $table->nullableMorphs('related'); // polymorphic relation to a muster, event, etc.
             $table->timestamps();
 
             // Production index folded into base migration

@@ -77,10 +77,10 @@ After Sprint A (partial), the critical security and data integrity issues are re
 | F6 | **Training dashboard view is a stub** -- Empty div with comment. | P2 | OPEN |
 | F7 | **Missing loading skeletons** -- No skeleton screens for data loads. | P2 | OPEN |
 | F8 | **Color-only status indicators** -- Fails WCAG for color blindness. | P2 | OPEN |
-| F9 | **Missing `aria-expanded` on standup cards** -- Screen readers can't announce toggle state. | P2 | OPEN |
+| F9 | **Missing `aria-expanded` on muster cards** -- Screen readers can't announce toggle state. | P2 | OPEN |
 | F10 | **`getModalConfigProperty()` not using `#[Computed]`** | P3 | OPEN |
 | F11 | **Icon system inconsistency** -- Mix of Flux icons, inline SVG, and emoji. | P3 | OPEN |
-| F12 | **Standup form mobile UX** -- Step connectors hidden on mobile. | P3 | OPEN |
+| F12 | **Muster form mobile UX** -- Step connectors hidden on mobile. | P3 | OPEN |
 
 ### Gamification & UX Design
 
@@ -98,10 +98,10 @@ After Sprint A (partial), the critical security and data integrity issues are re
 
 | # | Finding | Severity | Status |
 |---|---------|----------|--------|
-| T1 | **Empty factory stubs** -- `StandupTaskFactory`, `TrainingMilestoneFactory`, `TrainingCheckinFactory`, `PartnerNotificationFactory` filled with definitions and factory states. | P1 | FIXED |
+| T1 | **Empty factory stubs** -- `MusterTaskFactory`, `TrainingMilestoneFactory`, `TrainingCheckinFactory`, `PartnerNotificationFactory` filled with definitions and factory states. | P1 | FIXED |
 | T2 | **No `TrainingGoalFactory`** -- Created with full definition and states: `draft()`, `active()`, `completed()`, `verified()`, `withPartner()`, `pendingPartner()`. | P1 | FIXED |
 | T3 | **Gamification edge cases untested** -- Streak reset, boundary badges, concurrent awards, etc. | P1 | OPEN |
-| T4 | **No integration test for full standup flow** | P2 | OPEN |
+| T4 | **No integration test for full muster flow** | P2 | OPEN |
 | T5 | **No PHPUnit coverage configuration** | P3 | OPEN |
 
 ---
@@ -136,7 +136,7 @@ After Sprint A (partial), the critical security and data integrity issues are re
 | 024 | P3 | UX | Leaderboard pagination | OPEN |
 | 025 | P3 | UX | Points breakdown clarity | OPEN |
 | 026 | P3 | Code | `getModalConfigProperty()` not `#[Computed]` | OPEN |
-| 027 | P3 | A11y | Missing `aria-expanded` on standup cards | OPEN |
+| 027 | P3 | A11y | Missing `aria-expanded` on muster cards | OPEN |
 | 028 | P3 | UX | Icon system inconsistency | OPEN |
 
 ---
@@ -157,7 +157,7 @@ After Sprint A (partial), the critical security and data integrity issues are re
 | `app/Services/GamificationService.php` | Fixed `lockForUpdate()->fresh()` to `User::query()->lockForUpdate()->findOrFail()` |
 | `app/Services/TrainingGamificationService.php` | Fixed `lockForUpdate()->fresh()` to `TrainingMilestone::query()->lockForUpdate()->findOrFail()` |
 | `database/factories/UserFactory.php` | Added `$user->refresh()` in `afterCreating` for strict mode compatibility |
-| `database/factories/StandupTaskFactory.php` | Implemented full definition with states: `completed()`, `ongoing()`, `blocked()` |
+| `database/factories/MusterTaskFactory.php` | Implemented full definition with states: `completed()`, `ongoing()`, `blocked()` |
 | `database/factories/TrainingMilestoneFactory.php` | Implemented full definition with states: `completed()`, `verified()`, `skipped()` |
 | `database/factories/TrainingCheckinFactory.php` | Implemented full definition with states: `withLearnings()`, `withBlockers()` |
 | `database/factories/PartnerNotificationFactory.php` | Implemented full definition with states: `read()`, `actioned()` |
@@ -192,7 +192,7 @@ Duration: 28.94s
 **Goal**: Make gamification satisfying and exploit-proof.
 
 1. **Add badge unlock hints** (009) -- Migration to add `unlock_hint` column to `badges`. Seed hints. Display on locked badges.
-2. **Streak-at-risk banner** (010) -- Dashboard computed property: if no standup today and hour > 18, show warning.
+2. **Streak-at-risk banner** (010) -- Dashboard computed property: if no muster today and hour > 18, show warning.
 3. **Progress-to-next-badge** (G6) -- Query badge criteria thresholds, show progress bars on gamification page.
 4. **Badge unlock celebration** (019) -- Alpine.js toast/confetti triggered by Echo `BadgeEarned` event.
 5. **User timezone support** (016) -- Add `timezone` column to users, use in all date comparisons and early bird logic.
@@ -200,7 +200,7 @@ Duration: 28.94s
 7. **Add training table indexes** (015) -- Single migration adding all missing indexes.
 8. **Implement training dashboard view** (018) -- Wire up the existing `TrainingDashboard` component to a proper blade template.
 9. **Human-readable point reasons** (025) -- Create a mapping class or enum for point reason display names.
-10. **Fix remaining code issues** (021, 022) -- Delete dead `StandUpFocusArea`, add soft-delete cascades.
+10. **Fix remaining code issues** (021, 022) -- Delete dead focus-area pivot legacy, add soft-delete cascades.
 
 ### Sprint C -- Optimization & Polish (NOT STARTED)
 

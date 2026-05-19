@@ -4,6 +4,7 @@ use App\Models\User;
 use Laravel\Fortify\Features;
 
 test('login screen can be rendered', function (): void {
+    User::factory()->platformAdmin()->create();
     config()->set('services.github.client_id', 'test-client-id');
     config()->set('services.google.client_id', 'test-client-id');
 

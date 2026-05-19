@@ -19,7 +19,7 @@
                 <div class="relative z-20 mt-auto max-w-md space-y-4">
                     <p class="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-300">Mission Access</p>
                     <flux:heading size="xl" class="!text-slate-900 dark:!text-zinc-50">Invite-only operations for high-accountability teams.</flux:heading>
-                    <flux:text class="!text-slate-600 dark:!text-zinc-200">Coordinate standups, training, and execution from one secure command center.</flux:text>
+                    <flux:text class="!text-slate-600 dark:!text-zinc-200">Coordinate musters, training, and execution from one secure command center.</flux:text>
                 </div>
             </aside>
 

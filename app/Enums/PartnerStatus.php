@@ -13,7 +13,7 @@ enum PartnerStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::None => 'No Partner',
             self::Pending => 'Pending Response',
             self::Accepted => 'Accepted',
@@ -23,7 +23,7 @@ enum PartnerStatus: string
 
     public function icon(): string
     {
-        return match($this) {
+        return match ($this) {
             self::None => '👤',
             self::Pending => '⏳',
             self::Accepted => '🤝',
@@ -33,7 +33,7 @@ enum PartnerStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::None => 'text-gray-500',
             self::Pending => 'text-amber-500',
             self::Accepted => 'text-green-500',

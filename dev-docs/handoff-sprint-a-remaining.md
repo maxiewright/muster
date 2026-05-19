@@ -19,7 +19,7 @@ The previous agent verified and fixed the following:
 
 ### P1 Issues (4 resolved)
 - **006**: `PartnerRequestModal` and `MilestoneCompleteModal` -- replaced silent `if/return` with `abort_unless()` in all action methods
-- **011**: All 4 empty factory stubs filled (`StandupTaskFactory`, `TrainingMilestoneFactory`, `TrainingCheckinFactory`, `PartnerNotificationFactory`) with definitions and states
+- **011**: All 4 empty factory stubs filled (`MusterTaskFactory`, `TrainingMilestoneFactory`, `TrainingCheckinFactory`, `PartnerNotificationFactory`) with definitions and states
 - **T2**: Created `TrainingGoalFactory` with states: `draft()`, `active()`, `completed()`, `verified()`, `withPartner()`, `pendingPartner()`
 - **020**: Converted `$casts` property to `casts()` method on `TrainingMilestone`, `TrainingCheckin`, `PartnerNotification`
 
@@ -43,14 +43,14 @@ The previous agent verified and fixed the following:
 #### 2. Write Gamification Edge Case Tests (Issue 012)
 **File**: Create `tests/Feature/GamificationServiceTest.php`
 **Tests to write**:
-- Streak resets to 1 when user misses a day (create standup 2 days ago, not yesterday, then check in today)
+- Streak resets to 1 when user misses a day (create muster 2 days ago, not yesterday, then check in today)
 - Streak increments when user checks in on consecutive days
 - Streak boundary badges are awarded at thresholds: 3, 7, 14, 21, 30, 60, 90 days
 - Points milestone badges awarded at: 100, 250, 500, 1000, 2500, 5000, 10000 points
 - Duplicate badge prevention (calling `earnBadge()` twice returns false the second time)
 - `onMilestoneCompleted()` idempotency (calling twice only awards points once)
 - Early bird bonus only awarded when `now()->hour < 9`
-**Conventions**: Use Pest syntax (`it('...')` / `test('...')`), `RefreshDatabase`, factories. Seed badges with `BadgeSeeder` when testing badge awards. Follow patterns in `tests/Feature/Standup/StandupWizardTest.php`.
+**Conventions**: Use Pest syntax (`it('...')` / `test('...')`), `RefreshDatabase`, factories. Seed badges with `BadgeSeeder` when testing badge awards. Follow patterns in `tests/Feature/Muster/MusterWizardTest.php`.
 
 #### 3. Keyboard Accessibility for Drag-Drop (Issue 013)
 **Files**: Task board and calendar blade views in `resources/views/livewire/`
@@ -70,14 +70,14 @@ After finishing Sprint A, proceed to Sprint B. These are the P2 issues focused o
 - Display hint text on locked badges in `resources/views/components/gamification/⚡gamification/gamification.blade.php`
 
 #### 2. Streak-at-Risk Warning (Issue 010)
-- In the dashboard Livewire component, add a computed property: if `auth()->user()->todaysStandup()` is null and `now()->hour >= 18`, return true
+- In the dashboard Livewire component, add a computed property: if `auth()->user()->todaysMuster()` is null and `now()->hour >= 18`, return true
 - Display amber "Streak at risk -- check in before midnight!" banner on the dashboard view
 
 #### 3. Scope Broadcast Channels (Issue 014)
 - In `routes/channels.php`, the `muster` and `team` channels accept any authenticated user
 - Gamification events should broadcast to user-specific private channels: `user.{id}`
 - Update `PointsEarned`, `BadgeEarned` events to broadcast on `private-user.{userId}` instead of `muster`
-- Keep `StandupCreated` on `team` channel (it's a team-visible event)
+- Keep `MusterCreated` on `team` channel (it's a team-visible event)
 - Update frontend Echo listeners in `resources/js/echo.js` or equivalent
 
 #### 4. Add Training Table Indexes (Issue 015)
@@ -117,7 +117,7 @@ After finishing Sprint A, proceed to Sprint B. These are the P2 issues focused o
 - Add `timezone` column to users table (string, default `'UTC'`)
 - Add to User `$fillable`
 - Update `GamificationService::processCheckin()` early bird check: `now($user->timezone)->hour < 9`
-- Update `User::todaysStandup()` and `updateStreak()` to use user timezone
+- Update `User::todaysMuster()` and `updateStreak()` to use user timezone
 
 ---
 

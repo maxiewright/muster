@@ -18,7 +18,7 @@ it('awards streak badges based on current streak', function (): void {
         'role' => Role::Member,
     ]);
 
-    $service = app(GamificationService::class);
+    $service = resolve(GamificationService::class);
 
     $earned = $service->checkBadges($user->fresh());
 
@@ -48,7 +48,7 @@ it('awards points milestone badges based on total points', function (): void {
         'role' => Role::Member,
     ]);
 
-    $service = app(GamificationService::class);
+    $service = resolve(GamificationService::class);
 
     $service->checkBadges($user->fresh());
     $user->load('badges');
@@ -71,7 +71,7 @@ it('uses a single batch query to load all badges rather than one query per slug'
         'role' => Role::Member,
     ]);
 
-    $service = app(GamificationService::class);
+    $service = resolve(GamificationService::class);
 
     $slugLookupCount = 0;
 

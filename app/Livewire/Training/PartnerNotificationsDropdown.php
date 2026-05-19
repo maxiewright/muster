@@ -6,6 +6,8 @@ namespace App\Livewire\Training;
 
 use App\Enums\TaskStatus;
 use App\Models\PartnerNotification;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -34,7 +36,9 @@ class PartnerNotificationsDropdown extends Component
     #[Computed]
     public function notifications()
     {
-        return Auth::user()->partnerNotifications()
+        return PartnerNotification::query()
+            ->where('user_id', Auth::id())
+            ->inUnit(Auth::user()->activeUnitId())
             ->with(['fromUser', 'goal'])
             ->latest()
             ->take(10)
@@ -44,12 +48,20 @@ class PartnerNotificationsDropdown extends Component
     #[Computed]
     public function unreadCount()
     {
-        return Auth::user()->partnerNotifications()->whereNull('read_at')->count();
+        return PartnerNotification::query()
+            ->where('user_id', Auth::id())
+            ->inUnit(Auth::user()->activeUnitId())
+            ->whereNull('read_at')
+            ->count();
     }
 
     public function markAsRead(int $id): void
     {
-        $notification = PartnerNotification::findOrFail($id);
+        $notification = PartnerNotification::query()
+            ->where('user_id', Auth::id())
+            ->inUnit(Auth::user()->activeUnitId())
+            ->findOrFail($id);
+
         if ($notification->user_id === Auth::id()) {
             $notification->markAsRead();
         }
@@ -57,7 +69,11 @@ class PartnerNotificationsDropdown extends Component
 
     public function markAllAsRead(): void
     {
-        Auth::user()->partnerNotifications()->whereNull('read_at')->update(['read_at' => now()]);
+        PartnerNotification::query()
+            ->where('user_id', Auth::id())
+            ->inUnit(Auth::user()->activeUnitId())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
     }
 
     /**
@@ -130,7 +146,7 @@ class PartnerNotificationsDropdown extends Component
         );
     }
 
-    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+    public function render(): Factory|View
     {
         return view('livewire.training.partner-notifications-dropdown');
     }

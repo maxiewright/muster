@@ -19,6 +19,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('theme')->default('system');
             $table->string('password');
+            $table->string('oauth_provider')->nullable();
+            $table->string('oauth_id')->nullable();
 
             // Two-factor authentication (Fortify)
             $table->text('two_factor_secret')->nullable();
@@ -33,6 +35,10 @@ return new class extends Migration
             $table->unsignedInteger('longest_streak')->default(0);
 
             $table->timestamps();
+
+            $table->index('oauth_provider');
+            $table->index('oauth_id');
+            $table->unique(['oauth_provider', 'oauth_id']);
         });
 
         Schema::create('user_checkins', function (Blueprint $table) {

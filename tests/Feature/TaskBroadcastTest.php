@@ -38,7 +38,7 @@ test('TaskCreated broadcast payload contains task data', function (): void {
     $task = Task::factory()->create([
         'created_by' => $user->id,
         'title' => 'Test Task',
-        'status' => \App\Enums\TaskStatus::Todo,
+        'status' => TaskStatus::Todo,
     ]);
 
     $event = new TaskCreated($task);

@@ -4,6 +4,10 @@ use App\Enums\TaskStatus;
 use App\Events\TaskCompleted;
 use App\Events\TaskStatusChanged;
 use App\Models\Task;
+use App\Models\User;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -11,7 +15,7 @@ new class extends Component
 {
     public TaskStatus $status;
 
-    /** @var \Illuminate\Support\Collection<int, Task> */
+    /** @var Collection<int, Task> */
     public $tasks;
 
     public function sortTask(mixed $taskId, mixed $position): void
@@ -32,17 +36,17 @@ new class extends Component
             $task->update(['status' => $this->status]);
             $this->dispatch('task-moved');
             $actor = auth()->user();
-            if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
-                event(new \App\Events\TaskStatusChanged($task->fresh(['assignee']), $oldStatus, $this->status, $actor));
+            if ($actor instanceof User && $task->created_by !== $actor->id) {
+                event(new TaskStatusChanged($task->fresh(['assignee']), $oldStatus, $this->status, $actor));
             }
 
             if (! $wasCompleted && $this->status === TaskStatus::Completed) {
-                event(new \App\Events\TaskCompleted($task->fresh()));
+                event(new TaskCompleted($task->fresh()));
             }
         });
     }
 
-    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+    public function render(): Factory|View
     {
         return view('components.task.⚡task-column.task-column');
     }

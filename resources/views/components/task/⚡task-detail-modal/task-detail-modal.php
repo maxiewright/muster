@@ -23,7 +23,9 @@ new class extends Component
     #[Computed]
     public function task(): ?Task
     {
-        $task = Task::with(['assignee', 'creator', 'subtasks'])->find($this->taskId);
+        $task = Task::with(['assignee', 'creator', 'subtasks'])
+            ->inUnit(auth()->user()?->activeUnitId())
+            ->find($this->taskId);
 
         return $task && $task->canBeEditedBy(auth()->user()) ? $task : null;
     }
@@ -36,6 +38,8 @@ new class extends Component
             return;
         }
         Task::create([
+            'organization_id' => $parent->organization_id,
+            'unit_id' => $parent->unit_id,
             'parent_id' => $parent->id,
             'title' => $this->newSubtaskTitle,
             'status' => TaskStatus::Todo,
@@ -71,4 +75,4 @@ new class extends Component
     {
         return view('components.task.⚡task-detail-modal.task-detail-modal');
     }
-}
+};

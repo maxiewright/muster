@@ -16,7 +16,7 @@
 4. **Two-column form layouts without mobile fallback**: Split fields must stack on small screens.  
    Files: `/Users/home/Herd/muster/resources/views/components/task/⚡create-task-modal/create-task-modal.blade.php`, `/Users/home/Herd/muster/resources/views/components/calendar/⚡create-event-modal/create-event-modal.blade.php`
 5. **Tap target size for icon-only actions**: Icon-only buttons and navigation controls should meet 44px minimum tap size.  
-   Files: `/Users/home/Herd/muster/resources/views/components/calendar/⚡calendar-view/calendar-view.blade.php`, `/Users/home/Herd/muster/resources/views/components/standup/⚡standup-board/standup-board.blade.php`, `/Users/home/Herd/muster/resources/views/components/task/⚡task-card/task-card.blade.php`, `/Users/home/Herd/muster/resources/views/components/task/⚡task-detail-modal/task-detail-modal.blade.php`
+   Files: `/Users/home/Herd/muster/resources/views/components/calendar/⚡calendar-view/calendar-view.blade.php`, `/Users/home/Herd/muster/resources/views/components/muster/⚡muster-board/muster-board.blade.php`, `/Users/home/Herd/muster/resources/views/components/task/⚡task-card/task-card.blade.php`, `/Users/home/Herd/muster/resources/views/components/task/⚡task-detail-modal/task-detail-modal.blade.php`
 
 ## Global UI/UX Improvements
 
@@ -39,7 +39,7 @@ Files: task detail, create task, create event, two-factor setup modal.
 **Outcome:** Modals remain usable on smaller screens without off-screen buttons.
 
 **P1: Tap targets and touch ergonomics**  
-Files: calendar nav, standup nav, task controls.  
+Files: calendar nav, muster nav, task controls.  
 **Issue:** Icon-only controls risk sub-44px targets.  
 **Actionable fix:** Add padding and size variants (Flux `size="sm"` with padding utility) or wrap icons in buttons with `min-h-[44px] min-w-[44px]`.  
 **Outcome:** Better usability on phones, fewer missed taps.
@@ -80,25 +80,25 @@ File: `/Users/home/Herd/muster/resources/views/components/⚡dashboard/dashboard
 
 **P2**  
 File: `/Users/home/Herd/muster/resources/views/components/⚡dashboard/dashboard.blade.php`  
-**Issue:** Standup task summaries in list form may overflow or wrap awkwardly on smaller screens.  
+**Issue:** Muster task summaries in list form may overflow or wrap awkwardly on smaller screens.  
 **Fix:** Add `line-clamp-2` for task lists and reduce inline counts to prevent wrap.  
 **Outcome:** Cleaner mobile reading experience.
 
-### Standups (Board + Form)
+### Musters (Board + Form)
 **P1**  
-File: `/Users/home/Herd/muster/resources/views/components/standup/⚡standup-board/standup-board.blade.php`  
+File: `/Users/home/Herd/muster/resources/views/components/muster/⚡muster-board/muster-board.blade.php`  
 **Issue:** Date navigation uses icon-only controls without ensured tap size.  
 **Fix:** Wrap nav buttons in padding or apply `min-h-[44px] min-w-[44px]`.  
 **Outcome:** Usable navigation on mobile.
 
 **P1**  
-File: `/Users/home/Herd/muster/resources/views/components/standup/⚡standup-form/standup-form.blade.php`  
+File: `/Users/home/Herd/muster/resources/views/components/muster/⚡muster-form/muster-form.blade.php`  
 **Issue:** This form uses custom HTML and dense content; spacing is good but controls are not fully Flux-aligned.  
 **Fix:** Replace custom button styles and text inputs with Flux components where available for consistency and accessibility.  
 **Outcome:** Consistent form behavior and styling across the app.
 
 **P2**  
-File: `/Users/home/Herd/muster/resources/views/components/standup/⚡standup-form/standup-form.blade.php`  
+File: `/Users/home/Herd/muster/resources/views/components/muster/⚡muster-form/muster-form.blade.php`  
 **Issue:** Stepper is visually dense on small screens.  
 **Fix:** Reduce step labels to short text or move to a stacked vertical stepper on `<sm`.  
 **Outcome:** Better readability and flow on mobile.
@@ -186,4 +186,3 @@ File: `/Users/home/Herd/muster/resources/views/livewire/auth/two-factor-challeng
 - Confirm all interactive controls meet 44px minimum tap area.
 - Confirm modals are fully usable with internal scrolling.
 - Confirm theme switching works with light/dark/system.
-

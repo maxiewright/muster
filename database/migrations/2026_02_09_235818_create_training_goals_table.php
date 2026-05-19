@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('training_goals', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
             $table->string('slug')->unique();
 
             // Ownership
@@ -54,6 +56,9 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index('organization_id');
+            $table->index('unit_id');
         });
     }
 

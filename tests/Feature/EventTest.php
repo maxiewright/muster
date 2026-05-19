@@ -3,6 +3,7 @@
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\User;
+use Carbon\CarbonInterface;
 
 test('event can be created with all required fields', function (): void {
     $user = User::factory()->create();
@@ -12,14 +13,14 @@ test('event can be created with all required fields', function (): void {
         'user_id' => $user->id,
         'event_type_id' => $eventType->id,
         'title' => 'Team Meeting',
-        'description' => 'Weekly standup',
+        'description' => 'Weekly muster',
         'starts_at' => now(),
         'ends_at' => now()->addHour(),
     ]);
 
     expect($event)->toBeInstanceOf(Event::class);
     expect($event->title)->toBe('Team Meeting');
-    expect($event->description)->toBe('Weekly standup');
+    expect($event->description)->toBe('Weekly muster');
     expect($event->user_id)->toBe($user->id);
     expect($event->event_type_id)->toBe($eventType->id);
 });
@@ -113,8 +114,8 @@ test('event casts dates correctly', function (): void {
         'ends_at' => $endsAt,
     ]);
 
-    expect($event->starts_at)->toBeInstanceOf(\Carbon\CarbonInterface::class);
-    expect($event->ends_at)->toBeInstanceOf(\Carbon\CarbonInterface::class);
+    expect($event->starts_at)->toBeInstanceOf(CarbonInterface::class);
+    expect($event->ends_at)->toBeInstanceOf(CarbonInterface::class);
 });
 
 test('event can be marked as recurring', function (): void {

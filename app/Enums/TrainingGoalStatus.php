@@ -16,7 +16,7 @@ enum TrainingGoalStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Draft => 'Draft',
             self::PendingPartner => 'Awaiting Partner',
             self::Active => 'In Progress',
@@ -29,7 +29,7 @@ enum TrainingGoalStatus: string
 
     public function icon(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Draft => '📝',
             self::PendingPartner => '⏳',
             self::Active => '🎯',
@@ -42,7 +42,7 @@ enum TrainingGoalStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Draft => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
             self::PendingPartner => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
             self::Active => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',

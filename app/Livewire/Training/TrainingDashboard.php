@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Livewire\Training;
 
+use App\Enums\PartnerStatus;
+use App\Enums\TrainingGoalStatus;
+use App\Models\TrainingGoal;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -11,30 +14,50 @@ use Livewire\Component;
 class TrainingDashboard extends Component
 {
     #[Computed]
+    public function canManageAssignments(): bool
+    {
+        $user = Auth::user();
+
+        return $user !== null && $user->canAssignUnitTraining($user->activeUnit());
+    }
+
+    #[Computed]
     public function activeGoals()
     {
-        return Auth::user()->trainingGoals()
+        $user = Auth::user();
+
+        return TrainingGoal::query()
+            ->where('user_id', $user->id)
+            ->inUnit($user->activeUnitId())
             ->with(['partner', 'focusArea', 'milestones', 'checkins'])
-            ->where('status', \App\Enums\TrainingGoalStatus::Active)
+            ->where('status', TrainingGoalStatus::Active)
             ->get();
     }
 
     #[Computed]
     public function partnerGoals()
     {
-        return Auth::user()->partnerGoals()
+        $user = Auth::user();
+
+        return TrainingGoal::query()
+            ->where('accountability_partner_id', $user->id)
+            ->inUnit($user->activeUnitId())
             ->with(['user', 'focusArea', 'milestones', 'checkins'])
-            ->where('partner_status', \App\Enums\PartnerStatus::Accepted)
-            ->whereIn('status', [\App\Enums\TrainingGoalStatus::Active, \App\Enums\TrainingGoalStatus::Completed])
+            ->where('partner_status', PartnerStatus::Accepted)
+            ->whereIn('status', [TrainingGoalStatus::Active, TrainingGoalStatus::Completed])
             ->get();
     }
 
     #[Computed]
     public function pendingRequests()
     {
-        return Auth::user()->partnerGoals()
+        $user = Auth::user();
+
+        return TrainingGoal::query()
+            ->where('accountability_partner_id', $user->id)
+            ->inUnit($user->activeUnitId())
             ->with('user')
-            ->where('partner_status', \App\Enums\PartnerStatus::Pending)
+            ->where('partner_status', PartnerStatus::Pending)
             ->get();
     }
 
@@ -42,10 +65,18 @@ class TrainingDashboard extends Component
     public function stats(): array
     {
         $user = Auth::user();
+        $activeUnitId = $user->activeUnitId();
 
         return [
-            'completed' => $user->trainingGoals()->whereIn('status', [\App\Enums\TrainingGoalStatus::Completed, \App\Enums\TrainingGoalStatus::Verified])->count(),
-            'hours' => round($user->trainingGoals()->sum('logged_minutes') / 60, 1),
+            'completed' => TrainingGoal::query()
+                ->where('user_id', $user->id)
+                ->inUnit($activeUnitId)
+                ->whereIn('status', [TrainingGoalStatus::Completed, TrainingGoalStatus::Verified])
+                ->count(),
+            'hours' => round(TrainingGoal::query()
+                ->where('user_id', $user->id)
+                ->inUnit($activeUnitId)
+                ->sum('logged_minutes') / 60, 1),
             'partner_count' => $this->partnerGoals()->count(),
         ];
     }

@@ -7,9 +7,14 @@ namespace App\Models;
 use App\Enums\PartnerStatus;
 use App\Enums\Role;
 use App\Enums\TrainingGoalStatus;
+use App\Enums\UnitMembershipRole;
+use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,19 +24,22 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class User extends Authenticatable implements HasMedia
+class User extends Authenticatable implements FilamentUser, HasMedia
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, InteractsWithMedia, Notifiable, TwoFactorAuthenticatable;
 
     protected $fillable = [
         'name',
         'email',
+        'organization_id',
         'password',
         'oauth_provider',
         'oauth_id',
         'role',
+        'is_platform_admin',
         'theme',
     ];
 
@@ -58,6 +66,7 @@ class User extends Authenticatable implements HasMedia
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
+            'is_platform_admin' => 'boolean',
         ];
     }
 
@@ -73,6 +82,85 @@ class User extends Authenticatable implements HasMedia
         return ($this->role ?? Role::Lead) === Role::Lead;
     }
 
+    public function isPlatformAdmin(): bool
+    {
+        return $this->is_platform_admin;
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() === 'admin') {
+            return $this->isPlatformAdmin() && $this->email_verified_at !== null;
+        }
+
+        return false;
+    }
+
+    public function canManageOrganization(): bool
+    {
+        if ($this->isPlatformAdmin()) {
+            return true;
+        }
+
+        return $this->isLead();
+    }
+
+    public function canCreateUnits(): bool
+    {
+        return $this->organization_id !== null && $this->canManageOrganization();
+    }
+
+    public function activeUnitMembership(): ?UnitMembership
+    {
+        $activeUnitId = $this->activeUnitId();
+
+        if ($activeUnitId === null) {
+            return null;
+        }
+
+        return $this->unitMemberships()
+            ->where('unit_id', $activeUnitId)
+            ->first();
+    }
+
+    public function canManageUnit(?Unit $unit = null): bool
+    {
+        if ($this->canManageOrganization()) {
+            return true;
+        }
+
+        $targetUnit = $unit ?? $this->activeUnit();
+
+        if (! $targetUnit instanceof Unit) {
+            return false;
+        }
+
+        $membership = $this->unitMemberships()
+            ->where('unit_id', $targetUnit->id)
+            ->first();
+
+        if (! $membership instanceof UnitMembership) {
+            return false;
+        }
+
+        return in_array($membership->role, [UnitMembershipRole::Owner, UnitMembershipRole::Admin], true);
+    }
+
+    public function canInviteMembers(?Unit $unit = null): bool
+    {
+        return $this->organization_id !== null && $this->canManageUnit($unit);
+    }
+
+    public function canManageMissions(?Unit $unit = null): bool
+    {
+        return $this->organization_id !== null && $this->canManageUnit($unit);
+    }
+
+    public function canAssignUnitTraining(?Unit $unit = null): bool
+    {
+        return $this->organization_id !== null && $this->canManageUnit($unit);
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('avatar')
@@ -80,7 +168,7 @@ class User extends Authenticatable implements HasMedia
             ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
     }
 
-    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(64)
@@ -98,7 +186,7 @@ class User extends Authenticatable implements HasMedia
     public function profileImageUrl(string $size = 'avatar'): string
     {
         $media = $this->getFirstMedia('avatar');
-        if ($media instanceof \Spatie\MediaLibrary\MediaCollections\Models\Media) {
+        if ($media instanceof Media) {
             return $media->getUrl($size);
         }
         $hash = md5(strtolower(trim($this->email)));
@@ -124,9 +212,53 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(Event::class, 'user_id');
     }
 
-    public function standups(): HasMany
+    public function organization(): BelongsTo
     {
-        return $this->hasMany(Standup::class, 'user_id');
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function unitMemberships(): HasMany
+    {
+        return $this->hasMany(UnitMembership::class);
+    }
+
+    public function units(): BelongsToMany
+    {
+        return $this->belongsToMany(Unit::class, 'unit_memberships')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function firstAvailableUnit(): ?Unit
+    {
+        return $this->units()
+            ->orderBy('units.name')
+            ->first();
+    }
+
+    public function activeUnit(): ?Unit
+    {
+        $activeUnitId = session('active_unit_id');
+
+        if ($activeUnitId !== null) {
+            $activeUnit = $this->units()->whereKey($activeUnitId)->first();
+
+            if ($activeUnit instanceof Unit) {
+                return $activeUnit;
+            }
+        }
+
+        return $this->firstAvailableUnit();
+    }
+
+    public function activeUnitId(): ?int
+    {
+        return $this->activeUnit()?->id;
+    }
+
+    public function musters(): HasMany
+    {
+        return $this->hasMany(Muster::class, 'user_id');
     }
 
     public function checkins(): HasMany
@@ -189,14 +321,33 @@ class User extends Authenticatable implements HasMedia
             ->count();
     }
 
-    public function todaysStandup(): ?Standup
+    public function todaysMuster(): ?Muster
     {
-        return $this->standups()->whereDate('date', today())->first();
+        return $this->musterForDate(today(), $this->activeUnitId());
     }
 
-    public function latestStandup(): ?Standup
+    public function musterForDate(\DateTimeInterface|string $date, ?int $unitId = null): ?Muster
     {
-        return $this->standups()->latest('date')->first();
+        return $this->musters()
+            ->when($unitId !== null, fn ($query) => $query->inUnit($unitId))
+            ->whereDate('date', $date)
+            ->first();
+    }
+
+    public function latestMuster(): ?Muster
+    {
+        return $this->musters()->latest('date')->first();
+    }
+
+    public function previousMuster(\DateTimeInterface|string|null $beforeDate = null, ?int $unitId = null): ?Muster
+    {
+        $boundary = $beforeDate ?? today();
+
+        return $this->musters()
+            ->when($unitId !== null, fn ($query) => $query->inUnit($unitId))
+            ->whereDate('date', '<', $boundary)
+            ->latest('date')
+            ->first();
     }
 
     public function badges(): BelongsToMany
@@ -216,7 +367,7 @@ class User extends Authenticatable implements HasMedia
             'points' => $points,
             'reason' => $reason,
             'type' => $type,
-            'related_type' => $related instanceof \Illuminate\Database\Eloquent\Model ? get_class($related) : null,
+            'related_type' => $related instanceof Model ? get_class($related) : null,
             'related_id' => $related?->id,
         ]);
 
@@ -228,13 +379,9 @@ class User extends Authenticatable implements HasMedia
         $today = now()->toDateString();
         $yesterday = now()->subDay()->toDateString();
 
-        // Find the last standup before today
-        $previousStandup = $this->standups()
-            ->whereDate('date', '<', $today)
-            ->latest('date')
-            ->first();
+        $previousMuster = $this->previousMuster($today);
 
-        if ($previousStandup && $previousStandup->date->toDateString() === $yesterday) {
+        if ($previousMuster && $previousMuster->date->toDateString() === $yesterday) {
             // Continuing streak -- use atomic increment to prevent lost updates
             $this->increment('current_streak');
         } else {

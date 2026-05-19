@@ -14,11 +14,11 @@ class BadgeSeeder extends Seeder
     {
         $badges = [
             // ==========================================
-            // FIRST ACTIONS - Initiation Badges
+            // FIRST ACTIONS - Getting Started
             // ==========================================
             [
                 'slug' => 'first-muster',
-                'name' => 'Recruit',
+                'name' => 'First Step',
                 'description' => 'Completed your first muster check-in',
                 'icon' => '🎖️',
                 'color' => '#10b981',
@@ -42,7 +42,7 @@ class BadgeSeeder extends Seeder
             ],
 
             // ==========================================
-            // STREAK BADGES - Consistency & Discipline
+            // STREAK BADGES - Consistency & Momentum
             // ==========================================
             [
                 'slug' => 'streak-3',
@@ -62,7 +62,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'streak-14',
-                'name' => 'Fortnight Warrior',
+                'name' => 'Fortnight Focus',
                 'description' => '14 consecutive days on muster',
                 'icon' => '🛡️',
                 'color' => '#ec4899',
@@ -70,8 +70,8 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'streak-21',
-                'name' => 'Battle Hardened',
-                'description' => '21 consecutive days - discipline forged',
+                'name' => 'Built to Last',
+                'description' => '21 consecutive days - strong momentum established',
                 'icon' => '💪',
                 'color' => '#ef4444',
                 'points_reward' => 150,
@@ -94,19 +94,19 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'streak-90',
-                'name' => 'Centurion',
-                'description' => '90 consecutive days - legendary discipline',
+                'name' => 'Ninety-Day Streak',
+                'description' => '90 consecutive days - legendary consistency',
                 'icon' => '👑',
                 'color' => '#fbbf24',
                 'points_reward' => 1000,
             ],
 
             // ==========================================
-            // POINTS MILESTONES - Rank Progression
+            // POINTS MILESTONES - Progress Tiers
             // ==========================================
             [
                 'slug' => 'points-100',
-                'name' => 'Private',
+                'name' => 'Foundation',
                 'description' => 'Earned 100 points',
                 'icon' => '🔰',
                 'color' => '#6b7280',
@@ -114,7 +114,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'points-250',
-                'name' => 'Lance Corporal',
+                'name' => 'Building',
                 'description' => 'Earned 250 points',
                 'icon' => '📍',
                 'color' => '#3b82f6',
@@ -122,7 +122,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'points-500',
-                'name' => 'Corporal',
+                'name' => 'Developing',
                 'description' => 'Earned 500 points',
                 'icon' => '🎯',
                 'color' => '#6366f1',
@@ -130,7 +130,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'points-1000',
-                'name' => 'Sergeant',
+                'name' => 'Capable',
                 'description' => 'Earned 1,000 points',
                 'icon' => '🎖️',
                 'color' => '#8b5cf6',
@@ -138,7 +138,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'points-2500',
-                'name' => 'Staff Sergeant',
+                'name' => 'Proficient',
                 'description' => 'Earned 2,500 points',
                 'icon' => '🏅',
                 'color' => '#a855f7',
@@ -146,7 +146,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'points-5000',
-                'name' => 'Warrant Officer',
+                'name' => 'Advanced',
                 'description' => 'Earned 5,000 points',
                 'icon' => '🎗️',
                 'color' => '#d946ef',
@@ -154,19 +154,19 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'points-10000',
-                'name' => 'Lieutenant',
-                'description' => 'Earned 10,000 points - Officer class',
+                'name' => 'Vanguard',
+                'description' => 'Earned 10,000 points',
                 'icon' => '⚜️',
                 'color' => '#eab308',
                 'points_reward' => 500,
             ],
 
             // ==========================================
-            // TASK COMPLETION - Combat Achievements
+            // TASK COMPLETION - Delivery Achievements
             // ==========================================
             [
                 'slug' => 'tasks-10',
-                'name' => 'Skirmisher',
+                'name' => 'Task Starter',
                 'description' => 'Completed 10 tasks',
                 'icon' => '⚡',
                 'color' => '#22c55e',
@@ -174,7 +174,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'tasks-25',
-                'name' => 'Tactician',
+                'name' => 'Task Planner',
                 'description' => 'Completed 25 tasks',
                 'icon' => '🗡️',
                 'color' => '#14b8a6',
@@ -182,7 +182,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'tasks-50',
-                'name' => 'Veteran',
+                'name' => 'Task Finisher',
                 'description' => 'Completed 50 tasks',
                 'icon' => '🏹',
                 'color' => '#0ea5e9',
@@ -190,15 +190,15 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'tasks-100',
-                'name' => 'Centurion Commander',
-                'description' => 'Completed 100 tasks - a century of victories',
+                'name' => 'Delivery Leader',
+                'description' => 'Completed 100 tasks',
                 'icon' => '🦅',
                 'color' => '#6366f1',
                 'points_reward' => 200,
             ],
             [
                 'slug' => 'tasks-250',
-                'name' => 'War Hero',
+                'name' => 'Execution Expert',
                 'description' => 'Completed 250 tasks',
                 'icon' => '🎖️',
                 'color' => '#8b5cf6',
@@ -206,35 +206,35 @@ class BadgeSeeder extends Seeder
             ],
 
             // ==========================================
-            // SPECIAL ACHIEVEMENTS - Commendations
+            // SPECIAL ACHIEVEMENTS - Highlights
             // ==========================================
             [
                 'slug' => 'early-bird',
-                'name' => 'Dawn Patrol',
-                'description' => 'Checked in before 0600 hours, 5 times',
+                'name' => 'Early Start',
+                'description' => 'Checked in before 6:00 AM, 5 times',
                 'icon' => '🌅',
                 'color' => '#f97316',
                 'points_reward' => 30,
             ],
             [
                 'slug' => 'early-bird-10',
-                'name' => 'Reveille Master',
-                'description' => 'Checked in before 0600 hours, 10 times',
+                'name' => 'Sunrise Starter',
+                'description' => 'Checked in before 6:00 AM, 10 times',
                 'icon' => '🌄',
                 'color' => '#ea580c',
                 'points_reward' => 75,
             ],
             [
                 'slug' => 'night-owl',
-                'name' => 'Night Watch',
-                'description' => 'Checked in after 2200 hours, 5 times',
+                'name' => 'Late Push',
+                'description' => 'Checked in after 10:00 PM, 5 times',
                 'icon' => '🦉',
                 'color' => '#4338ca',
                 'points_reward' => 30,
             ],
             [
                 'slug' => 'weekend-warrior',
-                'name' => 'Weekend Warrior',
+                'name' => 'Weekend Momentum',
                 'description' => 'Checked in on 5 weekends',
                 'icon' => '⚔️',
                 'color' => '#dc2626',
@@ -242,7 +242,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'blocker-buster',
-                'name' => 'Obstacle Breacher',
+                'name' => 'Obstacle Solver',
                 'description' => 'Reported and resolved 10 blockers',
                 'icon' => '💥',
                 'color' => '#ef4444',
@@ -258,11 +258,11 @@ class BadgeSeeder extends Seeder
             ],
 
             // ==========================================
-            // TEAMWORK - Unit Citations
+            // TEAMWORK - Collaboration
             // ==========================================
             [
                 'slug' => 'battle-buddy',
-                'name' => 'Battle Buddy',
+                'name' => 'Trusted Teammate',
                 'description' => 'Helped a teammate overcome a blocker',
                 'icon' => '🤝',
                 'color' => '#14b8a6',
@@ -270,7 +270,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'squad-leader',
-                'name' => 'Squad Leader',
+                'name' => 'Team Coordinator',
                 'description' => 'Assigned 10 tasks to team members',
                 'icon' => '📢',
                 'color' => '#0891b2',
@@ -278,7 +278,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'force-multiplier',
-                'name' => 'Force Multiplier',
+                'name' => 'Momentum Builder',
                 'description' => 'Helped teammates complete 25 tasks',
                 'icon' => '🚀',
                 'color' => '#7c3aed',
@@ -286,7 +286,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'unit-cohesion',
-                'name' => 'Unit Cohesion',
+                'name' => 'Shared Momentum',
                 'description' => 'Full team checked in on the same day, 10 times',
                 'icon' => '🎪',
                 'color' => '#2563eb',
@@ -346,11 +346,11 @@ class BadgeSeeder extends Seeder
             ],
 
             // ==========================================
-            // MONTHLY ACHIEVEMENTS - Campaign Medals
+            // MONTHLY ACHIEVEMENTS - Consistency Milestones
             // ==========================================
             [
                 'slug' => 'perfect-week',
-                'name' => 'Perfect Formation',
+                'name' => 'Perfect Week',
                 'description' => 'Checked in every day for a full week (Mon-Sun)',
                 'icon' => '📅',
                 'color' => '#8b5cf6',
@@ -358,7 +358,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'perfect-month',
-                'name' => 'Campaign Medal',
+                'name' => 'Perfect Month',
                 'description' => 'Checked in every workday for a full month',
                 'icon' => '🏆',
                 'color' => '#eab308',
@@ -366,7 +366,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'quarterly-excellence',
-                'name' => 'Meritorious Service',
+                'name' => 'Quarter of Excellence',
                 'description' => 'Maintained 90%+ check-in rate for a quarter',
                 'icon' => '🎖️',
                 'color' => '#f59e0b',
@@ -374,7 +374,7 @@ class BadgeSeeder extends Seeder
             ],
 
             // ==========================================
-            // PRODUCTIVITY - Combat Efficiency
+            // PRODUCTIVITY - Execution Efficiency
             // ==========================================
             [
                 'slug' => 'task-blitz',
@@ -410,7 +410,7 @@ class BadgeSeeder extends Seeder
             ],
 
             // ==========================================
-            // RARE & PRESTIGIOUS - Distinguished Service
+            // RARE & PRESTIGIOUS - Long-Term Recognition
             // ==========================================
             [
                 'slug' => 'founding-member',
@@ -422,7 +422,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'hundred-days',
-                'name' => 'Century Guard',
+                'name' => 'Hundred Check-Ins',
                 'description' => 'Completed 100 total check-ins',
                 'icon' => '💯',
                 'color' => '#7c3aed',
@@ -430,8 +430,8 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'thousand-tasks',
-                'name' => 'Legion',
-                'description' => 'Completed 1,000 tasks - legendary status',
+                'name' => 'Thousand Tasks',
+                'description' => 'Completed 1,000 tasks',
                 'icon' => '🦁',
                 'color' => '#dc2626',
                 'points_reward' => 1000,
@@ -450,7 +450,7 @@ class BadgeSeeder extends Seeder
             // ==========================================
             [
                 'slug' => 'first-training-goal',
-                'name' => 'Cadet',
+                'name' => 'Goal Starter',
                 'description' => 'Completed your first training goal',
                 'icon' => '🎓',
                 'color' => '#10b981',
@@ -502,7 +502,7 @@ class BadgeSeeder extends Seeder
             ],
             [
                 'slug' => 'training-centurion',
-                'name' => 'Training Centurion',
+                'name' => 'Training Century',
                 'description' => 'Logged 100 hours of training',
                 'icon' => '💯',
                 'color' => '#7c3aed',
@@ -605,6 +605,6 @@ class BadgeSeeder extends Seeder
             );
         }
 
-        $this->command->info('🎖️ '.count($badges).' military badges seeded successfully!');
+        $this->command->info('🏅 '.count($badges).' badges seeded successfully!');
     }
 }

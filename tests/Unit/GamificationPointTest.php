@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\GamificationPoint;
 
 it('maps labels and point values correctly', function (): void {

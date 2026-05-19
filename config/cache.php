@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Str;
 
 return [
@@ -113,5 +115,21 @@ return [
     */
 
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Serializable Classes
+    |--------------------------------------------------------------------------
+    |
+    | This option controls which classes may be unserialized when retrieving
+    | items from the cache. Setting this to false prevents PHP object
+    | unserialization entirely, which is recommended for security.
+    |
+    | If your application stores PHP objects in cache, list those classes
+    | here explicitly.
+    |
+    */
+
+    'serializable_classes' => false,
 
 ];

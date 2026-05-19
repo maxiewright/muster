@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\Badge;
 use App\Models\User;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -46,7 +48,7 @@ new class extends Component
         return Badge::orderBy('slug')->get();
     }
 
-    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+    public function render(): Factory|View
     {
         return view('components.gamification.⚡gamification.gamification');
     }

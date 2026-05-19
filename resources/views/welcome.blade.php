@@ -10,7 +10,7 @@
 
             <header class="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-400/40 bg-emerald-500/15 p-0.5">
+                    <span class="inline-flex h-11 w-11 items-center justify-center">
                         <x-app-logo-icon />
                     </span>
                     <div>
@@ -40,7 +40,7 @@
                     </h1>
 
                     <p class="max-w-xl text-base text-zinc-300 sm:text-lg">
-                        Muster unifies standups, tasks, training goals, and progress streaks so your unit can execute faster and celebrate wins with clear signal.
+                        Muster unifies musters, tasks, training goals, and progress streaks so your unit can execute faster and celebrate wins with clear signal.
                     </p>
 
                     <div class="flex flex-wrap gap-3">

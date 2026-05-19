@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('team_invitations', function (Blueprint $table): void {
             $table->id();
+            $table->foreignId('organization_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('invited_by_user_id')->constrained('users')->cascadeOnDelete();
             $table->string('email');
             $table->string('role')->default('member');
@@ -21,6 +23,8 @@ return new class extends Migration
             $table->timestamp('accepted_at')->nullable();
             $table->timestamps();
 
+            $table->index('organization_id');
+            $table->index('unit_id');
             $table->index('email');
             $table->index('accepted_at');
         });

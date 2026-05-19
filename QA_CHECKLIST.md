@@ -3,7 +3,7 @@
 **Environment**
 - Browser: Chrome (latest), Safari (latest)
 - Viewports: 320px, 375px, 768px, 1024px
-- User: Test account with tasks, events, and standups
+- User: Test account with tasks, events, and musters
 
 ---
 
@@ -50,8 +50,8 @@
 
 ---
 
-## 5. Standups
-1. Open Standup Wizard.
+## 5. Musters
+1. Open Muster Wizard.
 2. Step 2: Quick Create Task input.
    - Expected: Input matches other field styles and focus ring is consistent.
 3. Step 2: “Today’s Tasks” list.

@@ -9,22 +9,32 @@
             <div class="absolute inset-0 -z-10 bg-[linear-gradient(rgba(148,163,184,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.10)_1px,transparent_1px)] bg-[size:44px_44px] dark:bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)]"></div>
 
             <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl backdrop-blur dark:border-zinc-600/90 dark:bg-zinc-900/95 dark:shadow-2xl">
-                <flux:heading level="1" size="xl" class="!text-slate-900 dark:!text-zinc-50">Initialize Command</flux:heading>
-                <flux:text class="mt-2 !text-slate-600 dark:!text-zinc-200">Create the first lead account to start inviting your team.</flux:text>
+                <flux:heading level="1" size="xl" class="!text-slate-900 dark:!text-zinc-50">Complete Organization Setup</flux:heading>
+                <flux:text class="mt-2 !text-slate-600 dark:!text-zinc-200">Set up your organization, first unit, and organization commander account.</flux:text>
 
-                <form method="POST" action="{{ route('setup.store') }}" class="mt-6 space-y-4">
+                <div class="mt-4 rounded-xl border border-emerald-200/70 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
+                    Setup invitation email: <span class="font-semibold">{{ $invitation->email }}</span>
+                </div>
+
+                <form method="POST" action="{{ route('setup.store', $invitation) }}" class="mt-6 space-y-4">
                     @csrf
 
                     <flux:field>
-                        <flux:label class="!text-slate-700 dark:!text-zinc-200">Commander Name</flux:label>
-                        <flux:input name="name" :value="old('name')" required autofocus />
-                        <flux:error name="name" />
+                        <flux:label class="!text-slate-700 dark:!text-zinc-200">Organization Name</flux:label>
+                        <flux:input name="organization_name" :value="old('organization_name')" required autofocus />
+                        <flux:error name="organization_name" />
                     </flux:field>
 
                     <flux:field>
-                        <flux:label class="!text-slate-700 dark:!text-zinc-200">Email</flux:label>
-                        <flux:input name="email" type="email" :value="old('email')" required autocomplete="email" />
-                        <flux:error name="email" />
+                        <flux:label class="!text-slate-700 dark:!text-zinc-200">Unit Name</flux:label>
+                        <flux:input name="unit_name" :value="old('unit_name')" required />
+                        <flux:error name="unit_name" />
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label class="!text-slate-700 dark:!text-zinc-200">Organization Commander Name</flux:label>
+                        <flux:input name="name" :value="old('name')" required />
+                        <flux:error name="name" />
                     </flux:field>
 
                     <flux:field>
@@ -39,7 +49,7 @@
                     </flux:field>
 
                     <flux:button type="submit" variant="primary" class="w-full min-h-[44px] !bg-emerald-600 hover:!bg-emerald-700 !border-emerald-600">
-                        Create Lead Account
+                        Create Workspace
                     </flux:button>
                 </form>
             </div>

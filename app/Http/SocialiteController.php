@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\TeamInvitation;
+use App\Models\UnitMembership;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
@@ -16,7 +19,7 @@ class SocialiteController extends Controller
     {
         $this->validateProvider($provider);
 
-        return Socialite::driver($provider)->stateless()->redirect();
+        return Socialite::driver($provider)->redirect();
     }
 
     public function callback(string $provider): RedirectResponse
@@ -24,7 +27,6 @@ class SocialiteController extends Controller
         $this->validateProvider($provider);
 
         $socialiteUser = Socialite::driver($provider)
-            ->stateless()
             ->user();
 
         $email = $socialiteUser->getEmail();
@@ -45,44 +47,46 @@ class SocialiteController extends Controller
         }
 
         if (! $user) {
-            $leadExists = User::query()->where('role', Role::Lead->value)->exists();
+            $invitation = TeamInvitation::query()
+                ->team()
+                ->pending()
+                ->where('email', $email)
+                ->latest()
+                ->first();
 
-            if (! $leadExists) {
-                $user = User::query()->create([
-                    'name' => $socialiteUser->getName() ?? $socialiteUser->getNickname() ?? 'Commander',
-                    'email' => $email,
-                    'password' => Hash::make(str()->random(24)),
-                    'role' => Role::Lead->value,
-                    'oauth_provider' => $provider,
-                    'oauth_id' => $socialiteUser->getId(),
+            if (! $invitation || $invitation->hasExpired()) {
+                return to_route('login')->withErrors([
+                    'socialite' => 'No active invitation found for this email.',
                 ]);
-
-                $user->forceFill(['email_verified_at' => now()])->save();
-            } else {
-                $invitation = TeamInvitation::query()
-                    ->pending()
-                    ->where('email', $email)
-                    ->latest()
-                    ->first();
-
-                if (! $invitation || $invitation->hasExpired()) {
-                    return to_route('login')->withErrors([
-                        'socialite' => 'No active invitation found for this email.',
-                    ]);
-                }
-
-                $user = User::query()->create([
-                    'name' => $socialiteUser->getName() ?? $socialiteUser->getNickname() ?? 'Operator',
-                    'email' => $email,
-                    'password' => Hash::make(str()->random(24)),
-                    'role' => $invitation->role,
-                    'oauth_provider' => $provider,
-                    'oauth_id' => $socialiteUser->getId(),
-                ]);
-
-                $user->forceFill(['email_verified_at' => now()])->save();
-                $invitation->markAsAccepted();
             }
+
+            $user = User::query()->create([
+                'name' => $socialiteUser->getName() ?? $socialiteUser->getNickname() ?? 'Operator',
+                'email' => $email,
+                'password' => Hash::make(str()->random(24)),
+                'organization_id' => $invitation->organization_id ?? $invitation->inviter?->organization_id,
+                'role' => $invitation->role,
+                'oauth_provider' => $provider,
+                'oauth_id' => $socialiteUser->getId(),
+            ]);
+
+            $user->forceFill(['email_verified_at' => now()])->save();
+
+            $defaultUnit = $invitation->unit ?? $invitation->inviter?->firstAvailableUnit();
+
+            if ($defaultUnit !== null) {
+                UnitMembership::query()->updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'unit_id' => $defaultUnit->id,
+                    ],
+                    [
+                        'role' => $invitation->role === Role::Lead->value ? 'owner' : 'member',
+                    ],
+                );
+            }
+
+            $invitation->markAsAccepted();
         } elseif (! $user->oauth_provider || ! $user->oauth_id) {
             $user->forceFill([
                 'oauth_provider' => $provider,

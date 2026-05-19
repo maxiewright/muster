@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +15,8 @@ class PartnerNotification extends Model
     use HasFactory;
 
     protected $fillable = [
+        'organization_id',
+        'unit_id',
         'user_id',
         'from_user_id',
         'training_goal_id',
@@ -42,6 +46,16 @@ class PartnerNotification extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function fromUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'from_user_id');
@@ -56,16 +70,24 @@ class PartnerNotification extends Model
     // SCOPES
     // ==========================================
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function unread($query)
+    #[Scope]
+    protected function unread(Builder $query): void
     {
-        return $query->whereNull('read_at');
+        $query->whereNull('read_at');
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function pending($query)
+    #[Scope]
+    protected function pending(Builder $query): void
     {
-        return $query->whereNull('actioned_at');
+        $query->whereNull('actioned_at');
+    }
+
+    #[Scope]
+    protected function inUnit(Builder $query, ?int $unitId): void
+    {
+        if ($unitId !== null) {
+            $query->where('unit_id', $unitId);
+        }
     }
 
     // ==========================================

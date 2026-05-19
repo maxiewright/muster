@@ -15,13 +15,25 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('team.invitations.store') }}" class="grid gap-4 md:grid-cols-3">
+            <form method="POST" action="{{ route('team.invitations.store') }}" class="grid gap-4 md:grid-cols-4">
                 @csrf
 
                 <flux:field class="md:col-span-2">
                     <flux:label>Email</flux:label>
                     <flux:input name="email" type="email" :value="old('email')" required placeholder="teammate@example.com" />
                     <flux:error name="email" />
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Unit</flux:label>
+                    <flux:select name="unit_id" required>
+                        @foreach($availableUnits as $unit)
+                            <flux:select.option value="{{ $unit->id }}" :selected="(int) old('unit_id', $activeUnit?->id) === $unit->id">
+                                {{ $unit->name }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    <flux:error name="unit_id" />
                 </flux:field>
 
                 <flux:field>
@@ -53,7 +65,7 @@
                     @forelse($pendingInvitations as $invitation)
                         <div class="p-4">
                             <flux:heading level="3">{{ $invitation->email }}</flux:heading>
-                            <flux:text size="sm">{{ ucfirst($invitation->role) }} · Expires {{ optional($invitation->expires_at)->diffForHumans() }}</flux:text>
+                            <flux:text size="sm">{{ ucfirst($invitation->role) }} · {{ $invitation->unit?->name ?? 'No unit' }} · Expires {{ optional($invitation->expires_at)->diffForHumans() }}</flux:text>
                         </div>
                     @empty
                         <div class="p-4">
@@ -71,7 +83,7 @@
                     @forelse($acceptedInvitations as $invitation)
                         <div class="p-4">
                             <flux:heading level="3">{{ $invitation->email }}</flux:heading>
-                            <flux:text size="sm">Accepted {{ optional($invitation->accepted_at)->diffForHumans() }}</flux:text>
+                            <flux:text size="sm">{{ $invitation->unit?->name ?? 'No unit' }} · Accepted {{ optional($invitation->accepted_at)->diffForHumans() }}</flux:text>
                         </div>
                     @empty
                         <div class="p-4">

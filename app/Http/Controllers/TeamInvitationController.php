@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Enums\Role;
@@ -7,6 +9,8 @@ use App\Http\Requests\AcceptTeamInvitationRequest;
 use App\Http\Requests\StoreTeamInvitationRequest;
 use App\Mail\TeamInvitationMail;
 use App\Models\TeamInvitation;
+use App\Models\Unit;
+use App\Models\UnitMembership;
 use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -18,28 +22,54 @@ class TeamInvitationController extends Controller
 {
     public function index(): Factory|View
     {
-        abort_unless(auth()->user()?->isLead(), 403);
+        $user = auth()->user();
+
+        abort_unless($user?->organization_id !== null, 403);
+
+        $availableUnits = $user->canManageOrganization()
+            ? Unit::query()
+                ->where('organization_id', $user->organization_id)
+                ->orderBy('name')
+                ->get()
+            : $user->units()
+                ->orderBy('units.name')
+                ->get();
+
+        $activeUnitId = $user->activeUnitId() ?? $availableUnits->first()?->id;
 
         return view('team.invitations.index', [
             'pendingInvitations' => TeamInvitation::query()
-                ->with('inviter')
+                ->team()
+                ->inUnit($activeUnitId)
+                ->with(['inviter', 'unit'])
                 ->pending()
                 ->latest()
                 ->limit(20)
                 ->get(),
             'acceptedInvitations' => TeamInvitation::query()
-                ->with('inviter')
+                ->team()
+                ->inUnit($activeUnitId)
+                ->with(['inviter', 'unit'])
                 ->whereNotNull('accepted_at')
                 ->latest('accepted_at')
                 ->limit(10)
                 ->get(),
+            'availableUnits' => $availableUnits,
             'roles' => Role::cases(),
         ]);
     }
 
     public function store(StoreTeamInvitationRequest $request): RedirectResponse
     {
-        abort_unless(auth()->user()?->isLead(), 403);
+        $user = $request->user();
+
+        abort_unless($user?->organization_id !== null, 403);
+
+        $activeUnit = Unit::query()
+            ->where('organization_id', $user->organization_id)
+            ->findOrFail($request->integer('unit_id'));
+
+        abort_unless($user->canInviteMembers($activeUnit), 403);
 
         $email = $request->string('email')->lower()->value();
 
@@ -49,11 +79,15 @@ class TeamInvitationController extends Controller
 
         TeamInvitation::query()
             ->pending()
+            ->inUnit($activeUnit->id)
             ->where('email', $email)
             ->delete();
 
         $invitation = TeamInvitation::query()->create([
-            'invited_by_user_id' => auth()->id(),
+            'kind' => TeamInvitation::KIND_TEAM,
+            'organization_id' => $user->organization_id,
+            'unit_id' => $activeUnit->id,
+            'invited_by_user_id' => $user->id,
             'email' => $email,
             'role' => $request->string('role')->value(),
             'token' => Str::random(64),
@@ -67,6 +101,10 @@ class TeamInvitationController extends Controller
 
     public function showAcceptForm(TeamInvitation $invitation): Factory|View|RedirectResponse
     {
+        if ($invitation->isBootstrap()) {
+            return to_route('setup', $invitation);
+        }
+
         if ($invitation->hasBeenAccepted()) {
             return to_route('login')->withErrors(['email' => 'This invitation was already used.']);
         }
@@ -82,6 +120,10 @@ class TeamInvitationController extends Controller
 
     public function accept(AcceptTeamInvitationRequest $request, TeamInvitation $invitation): RedirectResponse
     {
+        if ($invitation->isBootstrap()) {
+            return to_route('setup', $invitation);
+        }
+
         if ($invitation->hasBeenAccepted()) {
             return to_route('login')->withErrors(['email' => 'This invitation was already used.']);
         }
@@ -94,6 +136,7 @@ class TeamInvitationController extends Controller
             ['email' => $invitation->email],
             [
                 'name' => $request->string('name')->value(),
+                'organization_id' => $invitation->organization_id ?? $invitation->inviter?->organization_id,
                 'password' => $request->string('password')->value(),
                 'role' => $invitation->role,
             ],
@@ -101,6 +144,20 @@ class TeamInvitationController extends Controller
 
         if (! $user->email_verified_at) {
             $user->forceFill(['email_verified_at' => now()])->save();
+        }
+
+        $defaultUnit = $invitation->unit ?? $invitation->inviter?->firstAvailableUnit();
+
+        if ($defaultUnit !== null) {
+            UnitMembership::query()->updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'unit_id' => $defaultUnit->id,
+                ],
+                [
+                    'role' => $invitation->role === Role::Lead->value ? 'owner' : 'member',
+                ],
+            );
         }
 
         $invitation->markAsAccepted();

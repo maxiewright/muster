@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class StoreInitialUserRequest extends FormRequest
 {
@@ -17,14 +21,20 @@ class StoreInitialUserRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
+            'organization_name' => ['required', 'string', 'max:255'],
+            'unit_name' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'confirmed', 'min:8'],
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(12)->mixedCase()->letters()->numbers()->symbols(),
+            ],
         ];
     }
 
@@ -34,9 +44,9 @@ class StoreInitialUserRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Commander name is required.',
-            'email.required' => 'Email is required for the first account.',
-            'email.unique' => 'An account with this email already exists.',
+            'organization_name.required' => 'Organization name is required.',
+            'unit_name.required' => 'Unit name is required.',
+            'name.required' => 'Owner name is required.',
             'password.confirmed' => 'Password confirmation does not match.',
         ];
     }

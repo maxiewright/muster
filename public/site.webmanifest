@@ -1,7 +1,7 @@
 {
     "name": "Muster",
     "short_name": "Muster",
-    "description": "Daily standup tracker with gamification for engineering teams",
+    "description": "Daily muster tracker with gamification for engineering teams",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",

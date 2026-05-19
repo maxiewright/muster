@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Livewire\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class Profile extends Component
@@ -22,7 +23,7 @@ class Profile extends Component
     public string $email = '';
 
     /**
-     * @var \Livewire\TemporaryUploadedFile|null
+     * @var TemporaryUploadedFile|null
      */
     public $avatar;
 

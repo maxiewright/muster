@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\PartnerStatus;
 use App\Enums\TrainingCategory;
 use App\Enums\TrainingGoalStatus;
+use App\Models\TrainingGoal;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TrainingGoal>
+ * @extends Factory<TrainingGoal>
  */
 class TrainingGoalFactory extends Factory
 {
@@ -72,7 +74,7 @@ class TrainingGoalFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'accountability_partner_id' => $partner ?? User::factory(),
-            'partner_status' => \App\Enums\PartnerStatus::Accepted,
+            'partner_status' => PartnerStatus::Accepted,
         ]);
     }
 
@@ -80,7 +82,7 @@ class TrainingGoalFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'accountability_partner_id' => $partner ?? User::factory(),
-            'partner_status' => \App\Enums\PartnerStatus::Pending,
+            'partner_status' => PartnerStatus::Pending,
             'status' => TrainingGoalStatus::PendingPartner,
         ]);
     }

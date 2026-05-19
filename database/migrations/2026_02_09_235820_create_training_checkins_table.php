@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('training_checkins', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('training_goal_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('milestone_id')->nullable()->constrained('training_milestones')->nullOnDelete();
@@ -40,6 +42,9 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index('organization_id');
+            $table->index('unit_id');
         });
     }
 

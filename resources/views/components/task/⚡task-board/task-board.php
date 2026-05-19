@@ -5,7 +5,10 @@ use App\Enums\TaskStatus;
 use App\Events\TaskCompleted;
 use App\Events\TaskStatusChanged;
 use App\Models\Task;
+use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -129,13 +132,15 @@ new class extends Component
     #[Computed]
     public function tasks()
     {
+        $activeUnitId = auth()->user()?->activeUnitId();
         $query = Task::with(['assignee', 'creator', 'subtasks'])
+            ->inUnit($activeUnitId)
             ->withCount([
                 'subtasks',
                 'subtasks as subtasks_completed_count' => function ($query): void {
                     $query->where('status', TaskStatus::Completed);
                 },
-                'standups',
+                'musters',
             ])
             ->rootTasks()
             ->latest('updated_at');
@@ -169,9 +174,12 @@ new class extends Component
     #[Computed]
     public function myTasks()
     {
+        $activeUnitId = auth()->user()?->activeUnitId();
+
         return Task::with(['assignee', 'creator', 'subtasks'])
-            ->withCount(['subtasks', 'standups'])
-            /** @var \App\Models\User $user */
+            ->inUnit($activeUnitId)
+            ->withCount(['subtasks', 'musters'])
+            /** @var User $user */
             ->where('assigned_to', auth()->id())
             ->whereNot('status', TaskStatus::Completed)
             ->orderBy('priority')
@@ -182,20 +190,27 @@ new class extends Component
     #[Computed]
     public function teamMembers()
     {
+        $activeUnit = auth()->user()?->activeUnit();
+
+        if ($activeUnit instanceof Unit) {
+            return $activeUnit->users()->orderBy('name')->get();
+        }
+
         return User::orderBy('name')->get();
     }
 
     #[Computed]
     public function stats(): array
     {
-        $allTasks = Task::query();
+        $activeUnitId = auth()->user()?->activeUnitId();
+        $allTasks = Task::query()->inUnit($activeUnitId);
 
         return [
             'total' => $allTasks->count(),
-            'completed' => Task::where('status', TaskStatus::Completed)->count(),
-            'in_progress' => Task::where('status', TaskStatus::InProgress)->count(),
-            'overdue' => Task::overdue()->count(),
-            'unassigned' => Task::unassigned()->whereNot('status', TaskStatus::Completed)->count(),
+            'completed' => Task::query()->inUnit($activeUnitId)->where('status', TaskStatus::Completed)->count(),
+            'in_progress' => Task::query()->inUnit($activeUnitId)->where('status', TaskStatus::InProgress)->count(),
+            'overdue' => Task::query()->inUnit($activeUnitId)->overdue()->count(),
+            'unassigned' => Task::query()->inUnit($activeUnitId)->unassigned()->whereNot('status', TaskStatus::Completed)->count(),
         ];
     }
 
@@ -259,19 +274,19 @@ new class extends Component
             $oldStatus = $task->status;
             $task->update(['status' => $targetStatus]);
             $actor = auth()->user();
-            if ($actor instanceof \App\Models\User && $task->created_by !== $actor->id) {
-                event(new \App\Events\TaskStatusChanged($task->fresh(['assignee']), $oldStatus, $targetStatus, $actor));
+            if ($actor instanceof User && $task->created_by !== $actor->id) {
+                event(new TaskStatusChanged($task->fresh(['assignee']), $oldStatus, $targetStatus, $actor));
             }
 
             if (! $wasCompleted && $targetStatus === TaskStatus::Completed) {
-                event(new \App\Events\TaskCompleted($task->fresh()));
+                event(new TaskCompleted($task->fresh()));
             }
         });
 
         unset($this->tasks);
     }
 
-    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+    public function render(): Factory|View
     {
         return view('components.task.⚡task-board.task-board');
     }

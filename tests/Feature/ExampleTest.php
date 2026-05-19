@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 
 test('guest users can view the home page', function (): void {
-    User::factory()->lead()->create();
+    User::factory()->platformAdmin()->create();
 
     $response = $this->get(route('home'));
 
@@ -12,14 +14,24 @@ test('guest users can view the home page', function (): void {
         ->assertSee('src="'.asset('logo.svg').'"', false);
 });
 
-test('home redirects to setup when no users exist', function (): void {
+test('home redirects to system setup when no platform admin exists', function (): void {
     $response = $this->get(route('home'));
 
-    $response->assertRedirect(route('setup'));
+    $response->assertRedirect(route('system.setup'));
 });
 
-test('authenticated users are redirected from home to dashboard', function (): void {
-    $user = User::factory()->lead()->create();
+test('authenticated platform admins are redirected from home to admin dashboard', function (): void {
+    $user = User::factory()->platformAdmin()->create();
+    $this->actingAs($user);
+
+    $response = $this->get(route('home'));
+
+    $response->assertRedirect(route('filament.admin.pages.dashboard'));
+});
+
+test('authenticated regular users are redirected from home to user dashboard', function (): void {
+    User::factory()->platformAdmin()->create();
+    $user = User::factory()->create();
     $this->actingAs($user);
 
     $response = $this->get(route('home'));

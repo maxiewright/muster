@@ -22,7 +22,7 @@
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" x-data="{ animatedStreak: 0, animatedPoints: 0, animatedCheckins: 0, animatedTasks: 0 }" x-init="
                     setTimeout(() => { let s = {{ auth()->user()->current_streak ?? 0 }}; let i = 0; let t = setInterval(() => { animatedStreak = ++i; if(i>=s) clearInterval(t); }, 40); }, 100);
                     setTimeout(() => { let s = {{ auth()->user()->points ?? 0 }}; let i = 0; let step = Math.max(1, Math.floor(s/30)); let t = setInterval(() => { i = Math.min(i+step, s); animatedPoints = i; if(i>=s) clearInterval(t); }, 30); }, 200);
-                    setTimeout(() => { animatedCheckins = {{ $todaysStandups->count() }}; }, 300);
+                    setTimeout(() => { animatedCheckins = {{ $todaysMusters->count() }}; }, 300);
                     setTimeout(() => { animatedTasks = {{ $activeTasks->count() }}; }, 400);
                 ">
                     <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
@@ -46,10 +46,10 @@
 
             {{-- Quick Actions --}}
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                <a href="{{ $myStandup ? route('standup.edit', $myStandup) : route('standup.create') }}" wire:navigate
+                <a href="{{ $myMuster ? route('muster.edit', $myMuster) : route('muster.create') }}" wire:navigate
                    class="flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 active:scale-[0.98]">
                     <flux:icon.shield-check class="size-4" />
-                    {{ $myStandup ? 'Update Check-In' : 'Check In' }}
+                    {{ $myMuster ? 'Update Muster' : 'Start Muster' }}
                 </a>
                 <a href="{{ route('tasks') }}" wire:navigate
                    class="flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-sky-600/80 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-500/80 active:scale-[0.98]">
@@ -204,7 +204,7 @@
                     <flux:icon.messages-square class="size-4 text-sky-600 dark:text-sky-400" />
                     Squad Comms
                 </h2>
-                <a href="{{ route('standups') }}" wire:navigate class="text-xs text-slate-500 transition hover:text-emerald-600 dark:text-zinc-500 dark:hover:text-emerald-400">View all →</a>
+                <a href="{{ route('musters') }}" wire:navigate class="text-xs text-slate-500 transition hover:text-emerald-600 dark:text-zinc-500 dark:hover:text-emerald-400">View all →</a>
             </div>
             <div class="divide-y divide-slate-100 dark:divide-white/5">
                 @forelse($teamUpdates as $update)
@@ -215,7 +215,7 @@
                             <span class="text-[10px] text-slate-400 dark:text-zinc-600">{{ $update->created_at->diffForHumans() }}</span>
                         </div>
                         <p class="text-xs text-slate-500 dark:text-zinc-400">
-                            {{ $update->blockers ? 'Blocker: '.$update->blockers : 'Status posted with '.$update->standupTasks->count().' linked tasks.' }}
+                            {{ $update->blockers ? 'Blocker: '.$update->blockers : 'Status posted with '.$update->musterTasks->count().' linked tasks.' }}
                         </p>
                     </div>
                 @empty
@@ -238,28 +238,28 @@
                     </h2>
                 </div>
                 <div class="divide-y divide-slate-100 dark:divide-white/5">
-                    @forelse($todaysStandups as $standup)
+                    @forelse($todaysMusters as $muster)
                         <div class="p-4">
                             <div class="flex items-start gap-3">
-                                <flux:avatar :name="$standup->user->name" variant="solid" />
+                                <flux:avatar :name="$muster->user->name" variant="solid" />
                                 <div class="min-w-0 flex-1">
                                     <div class="mb-2 flex items-center gap-2">
-                                        <p class="text-sm font-medium text-slate-800 dark:text-zinc-200">{{ $standup->user->name }}</p>
-                                        @if($standup->mood)
-                                            <flux:tooltip :content="$standup->mood->label()">
-                                                <span class="cursor-help text-lg">{{ $standup->mood->emoji() }}</span>
+                                        <p class="text-sm font-medium text-slate-800 dark:text-zinc-200">{{ $muster->user->name }}</p>
+                                        @if($muster->mood)
+                                            <flux:tooltip :content="$muster->mood->label()">
+                                                <span class="cursor-help text-lg">{{ $muster->mood->emoji() }}</span>
                                             </flux:tooltip>
                                         @endif
-                                        <span class="text-[10px] text-slate-400 dark:text-zinc-600">{{ $standup->created_at->format('H:i') }}</span>
+                                        <span class="text-[10px] text-slate-400 dark:text-zinc-600">{{ $muster->created_at->format('H:i') }}</span>
                                     </div>
 
-                                    @if($standup->user_id === auth()->id())
-                                        <livewire:muster-standup-tasks :standup-id="$standup->id" :key="'muster-'.$standup->id" />
+                                    @if($muster->user_id === auth()->id())
+                                        <livewire:muster-tasks :muster-id="$muster->id" :key="'muster-'.$muster->id" />
                                     @else
                                         @php
-                                            $completed = $standup->standupTasks->where('status', \App\Enums\StandupTaskStatus::Completed);
-                                            $planned = $standup->standupTasks->where('status', \App\Enums\StandupTaskStatus::Planned);
-                                            $blocked = $standup->standupTasks->where('status', \App\Enums\StandupTaskStatus::Blocked);
+                                            $completed = $muster->musterTasks->where('status', \App\Enums\MusterTaskStatus::Completed);
+                                            $planned = $muster->musterTasks->where('status', \App\Enums\MusterTaskStatus::Planned);
+                                            $blocked = $muster->musterTasks->where('status', \App\Enums\MusterTaskStatus::Blocked);
                                         @endphp
 
                                         <div class="space-y-2 text-sm">
@@ -300,15 +300,15 @@
                                             @endif
 
                                             @if($completed->isEmpty() && $planned->isEmpty() && $blocked->isEmpty())
-                                                <p class="text-xs italic text-slate-400 dark:text-zinc-600">No tasks linked to this standup.</p>
+                                                <p class="text-xs italic text-slate-400 dark:text-zinc-600">No tasks linked to this muster.</p>
                                             @endif
                                         </div>
                                     @endif
 
-                                    @if($standup->blockers)
+                                    @if($muster->blockers)
                                         <div class="mt-2 flex items-start gap-1">
                                             <span class="text-red-500">!</span>
-                                            <p class="text-xs text-red-400">{{ $standup->blockers }}</p>
+                                            <p class="text-xs text-red-400">{{ $muster->blockers }}</p>
                                         </div>
                                     @endif
                                 </div>
@@ -358,7 +358,7 @@
                 <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-300">This Week</h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-sky-600 dark:text-sky-400">{{ $weeklyStandupsCount }}</p>
+                        <p class="text-2xl font-bold text-sky-600 dark:text-sky-400">{{ $weeklyMustersCount }}</p>
                         <p class="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Check-ins</p>
                     </div>
                     <div class="text-center">

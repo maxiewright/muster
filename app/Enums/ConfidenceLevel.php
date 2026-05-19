@@ -14,7 +14,7 @@ enum ConfidenceLevel: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Struggling => 'Struggling',
             self::Uncertain => 'Uncertain',
             self::OnTrack => 'On Track',
@@ -25,7 +25,7 @@ enum ConfidenceLevel: string
 
     public function emoji(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Struggling => '😰',
             self::Uncertain => '🤔',
             self::OnTrack => '👍',
@@ -36,7 +36,7 @@ enum ConfidenceLevel: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Struggling => 'text-red-500',
             self::Uncertain => 'text-amber-500',
             self::OnTrack => 'text-blue-500',

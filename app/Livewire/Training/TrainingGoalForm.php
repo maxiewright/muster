@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Training;
 
 use App\Enums\MilestoneStatus;
@@ -10,8 +12,10 @@ use App\Models\FocusArea;
 use App\Models\PartnerNotification;
 use App\Models\TrainingGoal;
 use App\Models\TrainingMilestone;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -51,7 +55,9 @@ class TrainingGoalForm extends Component
         $this->start_date = now()->toDateString();
         $this->target_date = now()->addMonth()->toDateString();
 
-        if ($goal && $goal->user_id === Auth::id()) {
+        if ($goal instanceof TrainingGoal) {
+            abort_unless($goal->canBeEditedBy(Auth::user()), 403);
+
             $this->goal = $goal->load('milestones');
             $this->isEditing = true;
 
@@ -93,9 +99,20 @@ class TrainingGoalForm extends Component
     #[Computed]
     public function users()
     {
-        return User::query()
-            ->where('id', '!=', Auth::id())
-            ->orderBy('name')
+        $user = Auth::user();
+        $activeUnit = $user->activeUnit();
+
+        if (! $activeUnit instanceof Unit) {
+            return User::query()
+                ->where('organization_id', $user->organization_id)
+                ->where('id', '!=', $user->id)
+                ->orderBy('name')
+                ->get();
+        }
+
+        return $activeUnit->users()
+            ->where('users.id', '!=', $user->id)
+            ->orderBy('users.name')
             ->get();
     }
 
@@ -133,9 +150,14 @@ class TrainingGoalForm extends Component
 
     public function save(): void
     {
+        $user = Auth::user();
+        $activeUnit = $user->activeUnit();
+
+        abort_unless($activeUnit instanceof Unit, 403);
+
         // Re-verify authorization at save time (not just mount) to guard against state manipulation.
         if ($this->isEditing && $this->goal) {
-            abort_unless($this->goal->canBeEditedBy(Auth::user()), 403);
+            abort_unless($this->goal->canBeEditedBy($user), 403);
         }
 
         $this->validate([
@@ -146,7 +168,12 @@ class TrainingGoalForm extends Component
             'focus_area_id' => ['required', 'integer', 'exists:focus_areas,id'],
             'start_date' => ['required', 'date'],
             'target_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'accountability_partner_id' => ['nullable', 'integer', 'exists:users,id'],
+            'accountability_partner_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('unit_memberships', 'user_id')
+                    ->where('unit_id', $activeUnit->id),
+            ],
             'milestones' => ['array'],
             'milestones.*.title' => ['nullable', 'string', 'max:255'],
             'milestones.*.target_date' => ['nullable', 'date'],
@@ -154,6 +181,8 @@ class TrainingGoalForm extends Component
         ]);
 
         $payload = [
+            'organization_id' => $user->organization_id,
+            'unit_id' => $activeUnit->id,
             'title' => $this->title,
             'description' => $this->description,
             'success_criteria' => $this->success_criteria,
@@ -173,7 +202,7 @@ class TrainingGoalForm extends Component
 
             $goal->milestones()->delete();
         } else {
-            $goal = Auth::user()->trainingGoals()->create($payload);
+            $goal = $user->trainingGoals()->create($payload);
         }
 
         $rows = collect($this->milestones)
@@ -200,12 +229,14 @@ class TrainingGoalForm extends Component
 
             if (! $existingRequest) {
                 PartnerNotification::query()->create([
+                    'organization_id' => $goal->organization_id,
+                    'unit_id' => $goal->unit_id,
                     'user_id' => $goal->accountability_partner_id,
-                    'from_user_id' => Auth::id(),
+                    'from_user_id' => $user->id,
                     'training_goal_id' => $goal->id,
                     'type' => 'partner_request',
                     'title' => 'New partner request',
-                    'message' => Auth::user()->name.' invited you to support: '.$goal->title,
+                    'message' => $user->name.' invited you to support: '.$goal->title,
                 ]);
             }
         }

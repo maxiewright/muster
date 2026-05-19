@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ConfidenceLevel;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +17,8 @@ class TrainingCheckin extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'organization_id',
+        'unit_id',
         'training_goal_id',
         'user_id',
         'milestone_id',
@@ -43,6 +47,16 @@ class TrainingCheckin extends Model
         return $this->belongsTo(TrainingGoal::class, 'training_goal_id');
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -56,6 +70,14 @@ class TrainingCheckin extends Model
     public function feedbackProvider(): BelongsTo
     {
         return $this->belongsTo(User::class, 'feedback_by');
+    }
+
+    #[Scope]
+    protected function inUnit(Builder $query, ?int $unitId): void
+    {
+        if ($unitId !== null) {
+            $query->where('unit_id', $unitId);
+        }
     }
 
     // ==========================================

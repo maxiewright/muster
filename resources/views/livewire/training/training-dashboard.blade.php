@@ -2,7 +2,13 @@
     <div class="relative mb-6 w-full">
         <flux:heading size="xl" level="1">{{ __('Training & Learning') }}</flux:heading>
         <flux:subheading size="lg" class="mb-6">{{ __('Set goals, track progress, and work with accountability partners.') }}</flux:subheading>
-        <div class="absolute right-0 top-0">
+        <div class="absolute right-0 top-0 flex gap-2">
+            @if($this->canManageAssignments)
+                <flux:button variant="ghost" href="{{ route('training.assignments') }}" wire:navigate>
+                    {{ __('Assign Training') }}
+                </flux:button>
+            @endif
+
             <flux:button variant="primary" icon="plus" href="{{ route('training.goals.create') }}">
                 {{ __('New Goal') }}
             </flux:button>

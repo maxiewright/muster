@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Livewire\Training;
 
 use App\Enums\ConfidenceLevel;
+use App\Enums\MilestoneStatus;
 use App\Models\TrainingGoal;
 use App\Models\TrainingMilestone;
+use App\Models\Unit;
 use App\Services\TrainingGamificationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -35,6 +38,7 @@ class TrainingCheckinForm extends Component
         $this->goal = $goal;
 
         abort_unless($this->goal->user_id === Auth::id(), 403);
+        abort_unless($this->goal->belongsToUserContext(Auth::user()), 403);
 
         $this->confidence_level = ConfidenceLevel::OnTrack->value;
     }
@@ -48,7 +52,11 @@ class TrainingCheckinForm extends Component
             'next_steps' => 'nullable|string',
             'minutes_logged' => 'required|integer|min:0',
             'confidence_level' => 'required|string',
-            'milestone_id' => 'nullable|exists:training_milestones,id',
+            'milestone_id' => [
+                'nullable',
+                Rule::exists('training_milestones', 'id')
+                    ->where('training_goal_id', $this->goal->id),
+            ],
         ];
     }
 
@@ -56,7 +64,7 @@ class TrainingCheckinForm extends Component
     public function milestones()
     {
         return $this->goal->milestones()
-            ->whereIn('status', [\App\Enums\MilestoneStatus::Pending, \App\Enums\MilestoneStatus::Completed])
+            ->whereIn('status', [MilestoneStatus::Pending, MilestoneStatus::Completed])
             ->get();
     }
 
@@ -68,9 +76,15 @@ class TrainingCheckinForm extends Component
 
     public function save(TrainingGamificationService $gamification): void
     {
+        $activeUnit = Auth::user()->activeUnit();
+
+        abort_unless($activeUnit instanceof Unit, 403);
+
         $this->validate();
 
         $checkin = $this->goal->checkins()->create([
+            'organization_id' => $this->goal->organization_id,
+            'unit_id' => $this->goal->unit_id,
             'user_id' => Auth::id(),
             'milestone_id' => $this->milestone_id,
             'progress_update' => $this->progress_update,
@@ -83,8 +97,8 @@ class TrainingCheckinForm extends Component
 
         // If milestone was selected, mark it as completed (but not verified yet)
         if ($this->milestone_id) {
-            $milestone = TrainingMilestone::find($this->milestone_id);
-            if ($milestone instanceof TrainingMilestone && $milestone->status === \App\Enums\MilestoneStatus::Pending) {
+            $milestone = $this->goal->milestones()->find($this->milestone_id);
+            if ($milestone instanceof TrainingMilestone && $milestone->status === MilestoneStatus::Pending) {
                 $milestone->markAsCompleted($this->progress_update);
                 $gamification->onMilestoneCompleted($milestone);
             }

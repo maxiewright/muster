@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
+use App\Http\Middleware\EnsureActiveUnitContext;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -15,6 +18,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,11 +30,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('viewPulse', function (User $user): bool {
-            return $user->isLead();
+            if ($user->isPlatformAdmin()) {
+                return true;
+            }
+
+            return $user->canManageOrganization();
         });
 
         $this->configureRateLimiting();
         $this->configureDefaults();
+        $this->configureLivewire();
         $this->configureModels();
         $this->configureUrls();
         $this->configureVite();
@@ -38,13 +47,15 @@ class AppServiceProvider extends ServiceProvider
 
     private function configureRateLimiting(): void
     {
+        $musterSubmitLimiter = function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        };
+
         RateLimiter::for('app', function (Request $request) {
             return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
         });
 
-        RateLimiter::for('standup-submit', function (Request $request) {
-            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
-        });
+        RateLimiter::for('muster-submit', $musterSubmitLimiter);
 
         RateLimiter::for('task-create', function (Request $request) {
             return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
@@ -60,6 +71,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('socialite', function (Request $request) {
             return Limit::perMinute(20)->by($request->ip());
+        });
+
+        RateLimiter::for('health', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
         });
     }
 
@@ -90,6 +105,13 @@ class AppServiceProvider extends ServiceProvider
         Model::automaticallyEagerLoadRelationships();
 
         Model::shouldBeStrict();
+    }
+
+    private function configureLivewire(): void
+    {
+        Livewire::addPersistentMiddleware([
+            EnsureActiveUnitContext::class,
+        ]);
     }
 
     private function configureUrls(): void

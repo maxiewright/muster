@@ -3,10 +3,11 @@
 declare(strict_types=1);
 
 use App\Events\BadgeEarned;
+use App\Events\MusterCreated;
 use App\Events\PointsEarned;
-use App\Events\StandupCreated;
 use App\Events\TrainingCheckinLogged;
 use App\Models\Badge;
+use App\Models\Muster;
 use App\Models\TrainingCheckin;
 use App\Models\TrainingGoal;
 use App\Models\User;
@@ -16,11 +17,11 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Support\Facades\Event;
 
-test('StandupCreated implements ShouldBroadcast and uses muster channel', function (): void {
+test('MusterCreated implements ShouldBroadcast and uses muster channel', function (): void {
     $user = User::factory()->create();
-    $standup = \App\Models\Standup::factory()->create(['user_id' => $user->id]);
+    $muster = Muster::factory()->create(['user_id' => $user->id]);
 
-    $event = new StandupCreated($standup);
+    $event = new MusterCreated($muster);
 
     expect($event)->toBeInstanceOf(ShouldBroadcast::class);
     expect($event->broadcastOn())->toHaveCount(1);
@@ -112,7 +113,7 @@ test('training checkin logging dispatches realtime event for partner', function 
         'minutes_logged' => 60,
     ]);
 
-    app(TrainingGamificationService::class)->onCheckinLogged($checkin->fresh(['goal', 'user']));
+    resolve(TrainingGamificationService::class)->onCheckinLogged($checkin->fresh(['goal', 'user']));
 
     Event::assertDispatched(TrainingCheckinLogged::class, function (TrainingCheckinLogged $event) use ($partner): bool {
         $channels = $event->broadcastOn();

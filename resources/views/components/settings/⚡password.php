@@ -3,9 +3,8 @@
 use App\Concerns\PasswordValidationRules;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Livewire\Volt\Component;
 
-new class extends Component
+new class extends Livewire\Component
 {
     use PasswordValidationRules;
 

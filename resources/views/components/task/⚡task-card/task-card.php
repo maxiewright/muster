@@ -4,6 +4,9 @@ use App\Enums\TaskStatus;
 use App\Events\TaskCompleted;
 use App\Events\TaskStatusChanged;
 use App\Models\Task;
+use App\Models\User;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -53,7 +56,7 @@ new class extends Component
         $this->dispatchTaskStatusChanged($oldStatus, $newStatus);
 
         if (! $wasCompleted && $newStatus === TaskStatus::Completed) {
-            event(new \App\Events\TaskCompleted($this->task->fresh()));
+            event(new TaskCompleted($this->task->fresh()));
         }
 
         $this->dispatch('task-updated');
@@ -73,7 +76,7 @@ new class extends Component
         $this->dispatchTaskStatusChanged($oldStatus, $newStatus);
 
         if (! $wasCompleted) {
-            event(new \App\Events\TaskCompleted($this->task->fresh()));
+            event(new TaskCompleted($this->task->fresh()));
         }
 
         $this->dispatch('task-updated');
@@ -100,7 +103,7 @@ new class extends Component
     protected function dispatchTaskStatusChanged(TaskStatus $fromStatus, TaskStatus $toStatus): void
     {
         $actor = auth()->user();
-        if (! $actor instanceof \App\Models\User) {
+        if (! $actor instanceof User) {
             return;
         }
 
@@ -109,10 +112,10 @@ new class extends Component
             return;
         }
 
-        event(new \App\Events\TaskStatusChanged($task, $fromStatus, $toStatus, $actor));
+        event(new TaskStatusChanged($task, $fromStatus, $toStatus, $actor));
     }
 
-    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
+    public function render(): Factory|View
     {
         return view('components.task.⚡task-card.task-card');
     }

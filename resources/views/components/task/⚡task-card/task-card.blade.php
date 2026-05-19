@@ -185,14 +185,14 @@
         @endif
     </div>
 
-    {{-- Standup Count --}}
+    {{-- Muster Count --}}
     @php
-        $standupCount = $task->standups_count ?? 0;
+        $musterCount = $task->musters_count ?? 0;
     @endphp
-    @if($standupCount > 0)
+    @if($musterCount > 0)
         <div class="{{ $compact ? 'mt-1.5 ml-6' : 'mt-2 ml-6' }}">
             <flux:badge size="sm" color="indigo" icon="messages-square" variant="pill">
-                {{ $standupCount }} standup(s)
+                {{ $musterCount }} muster(s)
             </flux:badge>
         </div>
     @endif

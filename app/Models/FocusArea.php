@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,13 +31,13 @@ class FocusArea extends Model
         return 'slug';
     }
 
-    public function standups(): BelongsToMany
+    public function musters(): BelongsToMany
     {
         return $this->belongsToMany(
-            Standup::class,
-            'standup_focus_area',
+            Muster::class,
+            'muster_focus_area',
             'focus_area_id',
-            'standup_id'
+            'muster_id'
         )->withTimestamps();
     }
 }

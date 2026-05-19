@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 use App\Enums\PartnerStatus;
 use App\Enums\TrainingCategory;
+use App\Enums\UnitMembershipRole;
+use App\Livewire\Training\TrainingGoalShow;
+use App\Models\Organization;
 use App\Models\TrainingGoal;
 use App\Models\TrainingMilestone;
+use App\Models\Unit;
+use App\Models\UnitMembership;
 use App\Models\User;
+use App\Services\TrainingGamificationService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -30,6 +38,18 @@ function makeGoal(array $attributes = []): TrainingGoal
         'partner_status' => 'pending',
         'is_public' => true,
     ], $attributes));
+}
+
+function attachTrainingGoalShowUserToUnit(User $user, Organization $organization, Unit $unit): void
+{
+    $user->forceFill(['organization_id' => $organization->id])->save();
+
+    UnitMembership::query()->firstOrCreate([
+        'user_id' => $user->id,
+        'unit_id' => $unit->id,
+    ], [
+        'role' => UnitMembershipRole::Member,
+    ]);
 }
 
 it('redirects unauthenticated users to the login page', function (): void {
@@ -78,6 +98,29 @@ it('allows any authenticated user to view a public goal', function (): void {
         ->assertOk();
 });
 
+it('denies access to a public goal outside the active unit', function (): void {
+    $organization = Organization::factory()->create();
+    $alphaUnit = Unit::factory()->for($organization)->create(['name' => 'Alpha Unit']);
+    $bravoUnit = Unit::factory()->for($organization)->create(['name' => 'Bravo Unit']);
+    $viewer = User::factory()->create(['organization_id' => $organization->id]);
+    $owner = User::factory()->create(['organization_id' => $organization->id]);
+
+    attachTrainingGoalShowUserToUnit($viewer, $organization, $alphaUnit);
+    attachTrainingGoalShowUserToUnit($owner, $organization, $bravoUnit);
+
+    $goal = makeGoal([
+        'user_id' => $owner->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $bravoUnit->id,
+        'is_public' => true,
+    ]);
+
+    $this->actingAs($viewer)
+        ->withSession(['active_unit_id' => $alphaUnit->id])
+        ->get(route('training.goals.show', $goal))
+        ->assertForbidden();
+});
+
 it('prevents verifying a milestone belonging to a different goal', function (): void {
     $partner = User::factory()->create();
     $owner = User::factory()->create();
@@ -102,10 +145,10 @@ it('prevents verifying a milestone belonging to a different goal', function (): 
 
     // The scoped findOrFail() correctly rejects the foreign milestone,
     // preventing cross-goal milestone manipulation.
-    expect(fn () => \Livewire\Livewire::actingAs($partner)
-        ->test(\App\Livewire\Training\TrainingGoalShow::class, ['goal' => $goal])
-        ->call('verifyMilestone', $milestoneBelongingToOtherGoal->id, app(\App\Services\TrainingGamificationService::class))
-    )->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+    expect(fn () => Livewire::actingAs($partner)
+        ->test(TrainingGoalShow::class, ['goal' => $goal])
+        ->call('verifyMilestone', $milestoneBelongingToOtherGoal->id, resolve(TrainingGamificationService::class))
+    )->toThrow(ModelNotFoundException::class);
 });
 
 it('forbids a non-partner from calling verifyGoal', function (): void {
@@ -118,9 +161,9 @@ it('forbids a non-partner from calling verifyGoal', function (): void {
         'status' => 'completed',
     ]);
 
-    \Livewire\Livewire::actingAs($randomUser)
-        ->test(\App\Livewire\Training\TrainingGoalShow::class, ['goal' => $goal])
-        ->call('verifyGoal', app(\App\Services\TrainingGamificationService::class))
+    Livewire::actingAs($randomUser)
+        ->test(TrainingGoalShow::class, ['goal' => $goal])
+        ->call('verifyGoal', resolve(TrainingGamificationService::class))
         ->assertForbidden();
 });
 
@@ -136,8 +179,8 @@ it('forbids a non-partner from calling acceptPartnerRequest', function (): void 
         'partner_status' => PartnerStatus::Pending->value,
     ]);
 
-    \Livewire\Livewire::actingAs($randomUser)
-        ->test(\App\Livewire\Training\TrainingGoalShow::class, ['goal' => $goal])
-        ->call('acceptPartnerRequest', app(\App\Services\TrainingGamificationService::class))
+    Livewire::actingAs($randomUser)
+        ->test(TrainingGoalShow::class, ['goal' => $goal])
+        ->call('acceptPartnerRequest', resolve(TrainingGamificationService::class))
         ->assertForbidden();
 });

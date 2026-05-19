@@ -2,11 +2,29 @@
 
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Muster;
+use App\Models\Organization;
 use App\Models\PartnerNotification;
-use App\Models\Standup;
 use App\Models\TrainingGoal;
+use App\Models\Unit;
+use App\Models\UnitMembership;
 use App\Models\User;
 use Livewire\Livewire;
+
+function attachUserToUnit(User $user, Organization $organization, Unit $unit, string $role = 'member'): void
+{
+    $user->forceFill(['organization_id' => $organization->id])->save();
+
+    UnitMembership::query()->updateOrCreate(
+        [
+            'user_id' => $user->id,
+            'unit_id' => $unit->id,
+        ],
+        [
+            'role' => $role,
+        ],
+    );
+}
 
 test('guests are redirected to the login page', function (): void {
     $response = $this->get(route('dashboard'));
@@ -21,23 +39,59 @@ test('authenticated users can visit the dashboard', function (): void {
     $response->assertOk();
 });
 
-test('dashboard displays todays standups', function (): void {
+test('dashboard layout exposes the operational navigation in the requested order', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
+    $user = User::factory()->lead()->create(['organization_id' => $organization->id]);
+    attachUserToUnit($user, $organization, $unit, 'owner');
+
+    $response = $this->actingAs($user)
+        ->withSession(['active_unit_id' => $unit->id])
+        ->get(route('dashboard'));
+
+    $response->assertOk();
+
+    $content = $response->getContent();
+
+    expect(strpos($content, 'href="'.route('musters').'"'))->toBeLessThan(strpos($content, 'href="'.route('missions.index').'"'));
+    expect(strpos($content, 'href="'.route('missions.index').'"'))->toBeLessThan(strpos($content, 'href="'.route('tasks').'"'));
+    expect(strpos($content, 'href="'.route('tasks').'"'))->toBeLessThan(strpos($content, 'href="'.route('training.dashboard').'"'));
+    expect(strpos($content, 'href="'.route('training.dashboard').'"'))->toBeLessThan(strpos($content, 'href="'.route('calendar').'"'));
+});
+
+test('dashboard displays todays musters', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
+    $otherUnit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Bravo', 'slug' => 'bravo']);
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
 
-    // Create standup for today
-    $todaysStandup = Standup::factory()->create([
+    attachUserToUnit($user, $organization, $unit);
+    attachUserToUnit($otherUser, $organization, $unit);
+    attachUserToUnit($otherUser, $organization, $otherUnit);
+
+    Muster::factory()->create([
         'user_id' => $otherUser->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'date' => today(),
     ]);
 
-    // Create standup for yesterday (should not appear)
-    Standup::factory()->create([
+    Muster::factory()->create([
         'user_id' => $otherUser->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $otherUnit->id,
+        'date' => today(),
+    ]);
+
+    Muster::factory()->create([
+        'user_id' => $otherUser->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'date' => today()->subDay(),
     ]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
 
     $response = $this->get(route('dashboard'));
 
@@ -46,91 +100,123 @@ test('dashboard displays todays standups', function (): void {
 });
 
 test('dashboard displays upcoming events for next 7 days', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
+    $otherUnit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Bravo', 'slug' => 'bravo']);
     $user = User::factory()->create();
     $eventType = EventType::factory()->create();
+    attachUserToUnit($user, $organization, $unit);
 
-    // Create event within next 7 days
-    $upcomingEvent = Event::factory()->create([
+    Event::factory()->create([
         'user_id' => $user->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'event_type_id' => $eventType->id,
         'starts_at' => now()->addDays(3),
         'title' => 'Upcoming Meeting',
     ]);
 
-    // Create event beyond 7 days (should not appear)
     Event::factory()->create([
         'user_id' => $user->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'event_type_id' => $eventType->id,
         'starts_at' => now()->addDays(10),
         'title' => 'Future Meeting',
     ]);
 
-    // Create past event (should not appear)
     Event::factory()->create([
         'user_id' => $user->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'event_type_id' => $eventType->id,
         'starts_at' => now()->subDays(1),
         'title' => 'Past Meeting',
     ]);
 
-    $this->actingAs($user);
+    Event::factory()->create([
+        'user_id' => $user->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $otherUnit->id,
+        'event_type_id' => $eventType->id,
+        'starts_at' => now()->addDays(2),
+        'title' => 'Other Unit Meeting',
+    ]);
+
+    $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
 
     $response = $this->get(route('dashboard'));
 
     $response->assertSuccessful();
     $response->assertSee('Upcoming Meeting');
+    $response->assertDontSee('Other Unit Meeting');
     $response->assertDontSee('Future Meeting');
     $response->assertDontSee('Past Meeting');
 });
 
-test('dashboard displays users own standup for today', function (): void {
+test('dashboard displays users own muster for today', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
     $user = User::factory()->create();
+    attachUserToUnit($user, $organization, $unit);
 
-    // Create the user's standup for today
-    $myStandup = Standup::factory()->create([
+    Muster::factory()->create([
         'user_id' => $user->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'date' => today(),
     ]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
 
     $response = $this->get(route('dashboard'));
 
     $response->assertSuccessful();
     // Should not display the prompt to check in
     $response->assertDontSee("You haven't checked in today");
-    // Should display the user's name in today's standups
+    // Should display the user's name in today's musters
     $response->assertSee($user->name);
 });
 
 test('dashboard limits upcoming events to 5', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
     $user = User::factory()->create();
     $eventType = EventType::factory()->create();
+    attachUserToUnit($user, $organization, $unit);
 
-    // Create 7 events within next 7 days
     Event::factory()->count(7)->create([
         'user_id' => $user->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'event_type_id' => $eventType->id,
         'starts_at' => now()->addDays(1),
     ]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
 
     $response = $this->get(route('dashboard'));
 
     $response->assertSuccessful();
     // Should only show 5 events maximum
-    expect(\App\Models\Event::where('starts_at', '>=', now())
+    expect(Event::where('starts_at', '>=', now())
         ->where('starts_at', '<=', now()->addDays(7))
         ->count())->toBe(7);
 });
 
 test('dashboard displays notifications and team updates from others', function (): void {
+    $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
+    $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
     $user = User::factory()->create();
     $teammate = User::factory()->create(['name' => 'Teammate One']);
     $sender = User::factory()->create(['name' => 'Captain Carter']);
+    attachUserToUnit($user, $organization, $unit);
+    attachUserToUnit($teammate, $organization, $unit);
+    attachUserToUnit($sender, $organization, $unit);
     $goal = TrainingGoal::query()->create([
         'slug' => 'combat-readiness-goal',
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'user_id' => $sender->id,
         'title' => 'Combat Readiness',
         'start_date' => now()->toDateString(),
@@ -139,13 +225,17 @@ test('dashboard displays notifications and team updates from others', function (
         'partner_status' => 'accepted',
     ]);
 
-    Standup::factory()->create([
+    Muster::factory()->create([
         'user_id' => $teammate->id,
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'date' => today(),
         'blockers' => 'Waiting for deployment approval.',
     ]);
 
     PartnerNotification::query()->create([
+        'organization_id' => $organization->id,
+        'unit_id' => $unit->id,
         'user_id' => $user->id,
         'from_user_id' => $sender->id,
         'training_goal_id' => $goal->id,
@@ -154,13 +244,13 @@ test('dashboard displays notifications and team updates from others', function (
         'message' => 'Captain Carter logged a training check-in.',
     ]);
 
-    $this->actingAs($user);
+    $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
 
     $response = $this->get(route('dashboard'));
 
     $response->assertSuccessful();
-    $response->assertSee('Notifications');
-    $response->assertSee('Team Updates');
+    $response->assertSee('Intel Feed');
+    $response->assertSee('Squad Comms');
     $response->assertSee('Partner check-in submitted');
     $response->assertSee('Captain Carter');
     $response->assertSee('Teammate One');

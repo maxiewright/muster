@@ -1,8 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+declare(strict_types=1);
 
-Artisan::command('inspire', function (): void {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('horizon:snapshot')->everyFiveMinutes();
+
+Schedule::command('pulse:check')->everyFiveMinutes()->withoutOverlapping();
+
+Schedule::command('queue:prune-batches --hours=48')->daily();

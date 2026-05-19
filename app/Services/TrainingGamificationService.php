@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\PartnerStatus;
 use App\Enums\TrainingGamificationPoint;
 use App\Events\BadgeEarned;
+use App\Events\TrainingCheckinLogged;
 use App\Models\Badge;
 use App\Models\PartnerNotification;
 use App\Models\TrainingCheckin;
@@ -295,6 +296,8 @@ class TrainingGamificationService
         }
 
         PartnerNotification::create([
+            'organization_id' => $goal->organization_id,
+            'unit_id' => $goal->unit_id,
             'user_id' => $partner->id,
             'from_user_id' => $checkin->user_id,
             'training_goal_id' => $goal->id,
@@ -309,6 +312,6 @@ class TrainingGamificationService
             ],
         ]);
 
-        event(new \App\Events\TrainingCheckinLogged($checkin, $partner));
+        event(new TrainingCheckinLogged($checkin, $partner));
     }
 }

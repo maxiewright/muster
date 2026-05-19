@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Enums\PartnerStatus;
 use App\Enums\TrainingCategory;
 use App\Enums\TrainingGoalStatus;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +22,10 @@ class TrainingGoal extends Model
 
     protected $fillable = [
         'slug',
+        'organization_id',
+        'unit_id',
         'user_id',
+        'assigned_by_user_id',
         'accountability_partner_id',
         'title',
         'description',
@@ -36,6 +41,9 @@ class TrainingGoal extends Model
         'estimated_hours',
         'base_points_value',
         'is_public',
+        'is_unit_directed',
+        'accountability_partner_required',
+        'accountability_partner_locked',
     ];
 
     protected function casts(): array
@@ -49,6 +57,9 @@ class TrainingGoal extends Model
             'partner_status' => PartnerStatus::class,
             'category' => TrainingCategory::class,
             'is_public' => 'boolean',
+            'is_unit_directed' => 'boolean',
+            'accountability_partner_required' => 'boolean',
+            'accountability_partner_locked' => 'boolean',
         ];
     }
 
@@ -70,9 +81,24 @@ class TrainingGoal extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function partner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accountability_partner_id');
+    }
+
+    public function assignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by_user_id');
     }
 
     public function verifier(): BelongsTo
@@ -99,36 +125,44 @@ class TrainingGoal extends Model
     // SCOPES
     // ==========================================
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function active($query)
+    #[Scope]
+    protected function active(Builder $query): void
     {
-        return $query->where('status', TrainingGoalStatus::Active);
+        $query->where('status', TrainingGoalStatus::Active);
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function forUser($query, User $user)
+    #[Scope]
+    protected function forUser(Builder $query, User $user): void
     {
-        return $query->where('user_id', $user->id);
+        $query->where('user_id', $user->id);
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function asPartner($query, User $user)
+    #[Scope]
+    protected function asPartner(Builder $query, User $user): void
     {
-        return $query->where('accountability_partner_id', $user->id)
+        $query->where('accountability_partner_id', $user->id)
             ->where('partner_status', PartnerStatus::Accepted);
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function public($query)
+    #[Scope]
+    protected function public(Builder $query): void
     {
-        return $query->where('is_public', true);
+        $query->where('is_public', true);
     }
 
-    #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function needingPartnerResponse($query, User $user)
+    #[Scope]
+    protected function needingPartnerResponse(Builder $query, User $user): void
     {
-        return $query->where('accountability_partner_id', $user->id)
+        $query->where('accountability_partner_id', $user->id)
             ->where('partner_status', PartnerStatus::Pending);
+    }
+
+    #[Scope]
+    protected function inUnit(Builder $query, ?int $unitId): void
+    {
+        if ($unitId !== null) {
+            $query->where('unit_id', $unitId);
+        }
     }
 
     // ==========================================
@@ -221,18 +255,38 @@ class TrainingGoal extends Model
 
     public function canBeEditedBy(User $user): bool
     {
-        return $this->user_id === $user->id && $this->status->canEdit();
+        return $this->belongsToUserContext($user)
+            && $this->user_id === $user->id
+            && $this->status->canEdit();
     }
 
     public function canBeVerifiedBy(User $user): bool
     {
-        // Partner can verify, or team lead can verify
-        return ($this->accountability_partner_id === $user->id && $this->partner_status === PartnerStatus::Accepted)
-            || $user->isLead();
+        return $this->belongsToUserContext($user)
+            && (($this->accountability_partner_id === $user->id && $this->partner_status === PartnerStatus::Accepted)
+            || $user->isLead());
     }
 
     public function isOwnedBy(User $user): bool
     {
-        return $this->user_id === $user->id;
+        return $this->belongsToUserContext($user) && $this->user_id === $user->id;
+    }
+
+    public function isInUnit(?int $unitId): bool
+    {
+        return $unitId === null || $this->unit_id === null || $this->unit_id === $unitId;
+    }
+
+    public function belongsToUserContext(User $user): bool
+    {
+        $activeUnitId = $user->activeUnitId();
+
+        if ($activeUnitId !== null && $this->unit_id !== null && $this->unit_id !== $activeUnitId) {
+            return false;
+        }
+
+        return $this->organization_id === null
+            || $user->organization_id === null
+            || $this->organization_id === $user->organization_id;
     }
 }

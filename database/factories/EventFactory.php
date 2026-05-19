@@ -2,10 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\Event;
+use App\Models\EventType;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Event>
+ * @extends Factory<Event>
  */
 class EventFactory extends Factory
 {
@@ -20,8 +23,8 @@ class EventFactory extends Factory
         $endsAt = fake()->dateTimeBetween($startsAt, $startsAt->format('Y-m-d H:i:s').' +4 hours');
 
         return [
-            'user_id' => \App\Models\User::factory(),
-            'event_type_id' => \App\Models\EventType::factory(),
+            'user_id' => User::factory(),
+            'event_type_id' => EventType::factory(),
             'title' => fake()->sentence(4),
             'description' => fake()->optional()->paragraph(),
             'starts_at' => $startsAt,

@@ -12,10 +12,24 @@
 }" @dragover.prevent="">
     {{-- Header: mobile-first --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <flux:heading level="1">Team Calendar</flux:heading>
-        <flux:button variant="primary" icon="plus" wire:click="$set('showCreateModal', true)" class="min-h-[44px] w-full sm:w-auto">
-            New Event
-        </flux:button>
+        <div>
+            <flux:heading level="1">Operational Calendar</flux:heading>
+            <flux:subheading>Actions, events, and planned training in one scheduling view.</flux:subheading>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+                <span class="h-2.5 w-2.5 rounded-full bg-blue-500"></span> Events
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+                <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span> Actions
+            </span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Planned Training
+            </span>
+            <flux:button variant="primary" icon="plus" wire:click="$set('showCreateModal', true)" class="min-h-[44px] w-full sm:w-auto">
+                New Event
+            </flux:button>
+        </div>
     </div>
 
     {{-- Calendar --}}
@@ -46,21 +60,21 @@
                     })
                     ->filter(function ($day) {
                         $dateKey = $day->format('Y-m-d');
-                        $dayEvents = $this->events[$dateKey] ?? collect();
+                        $dayItems = $this->calendarItems[$dateKey] ?? collect();
 
-                        return $day->isToday() || $dayEvents->isNotEmpty();
+                        return $day->isToday() || $dayItems->isNotEmpty();
                     });
             @endphp
 
             @if($mobileDays->isEmpty())
                 <div class="p-6 text-center">
-                    <flux:text variant="subtle">No events this month.</flux:text>
+                    <flux:text variant="subtle">No scheduled items this month.</flux:text>
                 </div>
             @else
                 @foreach($mobileDays as $day)
                     @php
                         $dateKey = $day->format('Y-m-d');
-                        $dayEvents = $this->events[$dateKey] ?? collect();
+                        $dayItems = $this->calendarItems[$dateKey] ?? collect();
                     @endphp
                     <button type="button"
                             wire:click="selectDate('{{ $dateKey }}')"
@@ -75,20 +89,34 @@
                                 </flux:text>
                             </div>
                             <flux:badge size="sm" color="{{ $day->isToday() ? 'blue' : 'zinc' }}">
-                                {{ $dayEvents->count() }} event{{ $dayEvents->count() === 1 ? '' : 's' }}
+                                {{ $dayItems->count() }} item{{ $dayItems->count() === 1 ? '' : 's' }}
                             </flux:badge>
                         </div>
-                        @if($dayEvents->isNotEmpty())
+                        @if($dayItems->isNotEmpty())
                             <div class="mt-2 space-y-1">
-                                @foreach($dayEvents->take(5) as $event)
-                                    <div class="flex items-center gap-2 text-xs py-1 px-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer" wire:click.stop="editEvent({{ $event->id }})">
-                                        <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ $event->typeColor }}"></span>
-                                        <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $event->starts_at->format('H:i') }}</span>
-                                        <span class="truncate text-zinc-600 dark:text-zinc-400">{{ $event->title }}</span>
-                                    </div>
+                                @foreach($dayItems->take(5) as $item)
+                                    @if($item['type'] === 'event')
+                                        <div class="flex items-center gap-2 rounded px-2 py-1 text-xs transition hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" wire:click.stop="editEvent({{ $item['id'] }})">
+                                            <span class="h-3 w-3 flex-shrink-0 rounded-full" style="background-color: {{ $item['color'] }}"></span>
+                                            <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $item['time_label'] }}</span>
+                                            <span class="truncate text-zinc-600 dark:text-zinc-400">{{ $item['title'] }}</span>
+                                        </div>
+                                    @elseif($item['url'])
+                                        <div class="flex items-center gap-2 rounded px-2 py-1 text-xs transition hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                            <span class="h-3 w-3 flex-shrink-0 rounded-full" style="background-color: {{ $item['color'] }}"></span>
+                                            <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $item['time_label'] }}</span>
+                                            <span class="truncate text-zinc-600 dark:text-zinc-400">{{ $item['title'] }}</span>
+                                        </div>
+                                    @else
+                                        <div class="flex items-center gap-2 rounded px-2 py-1 text-xs">
+                                            <span class="h-3 w-3 flex-shrink-0 rounded-full" style="background-color: {{ $item['color'] }}"></span>
+                                            <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $item['time_label'] }}</span>
+                                            <span class="truncate text-zinc-600 dark:text-zinc-400">{{ $item['title'] }}</span>
+                                        </div>
+                                    @endif
                                 @endforeach
-                                @if($dayEvents->count() > 5)
-                                    <flux:text size="xs" variant="subtle" class="pl-7">+{{ $dayEvents->count() - 5 }} more</flux:text>
+                                @if($dayItems->count() > 5)
+                                    <flux:text size="xs" variant="subtle" class="pl-7">+{{ $dayItems->count() - 5 }} more</flux:text>
                                 @endif
                             </div>
                         @endif
@@ -113,7 +141,7 @@
                     $isCurrentMonth = $day->month === $currentMonth->month;
                     $isToday = $day->isToday();
                     $dateKey = $day->format('Y-m-d');
-                    $dayEvents = $this->events[$dateKey] ?? collect();
+                    $dayItems = $this->calendarItems[$dateKey] ?? collect();
                 @endphp
                 <div wire:click="selectDate('{{ $dateKey }}')"
                      @drop="onDrop($event, '{{ $dateKey }}')"
@@ -128,20 +156,34 @@
                     </div>
 
                     <div class="space-y-1">
-                        @foreach($dayEvents->take(4) as $event)
-                            <div class="text-[10px] sm:text-xs px-2 py-1 rounded shadow-sm truncate text-white cursor-pointer hover:brightness-110 active:scale-95 transition-all duration-150"
-                                 draggable="true"
-                                 @dragstart="onDragStart($event, {{ $event->id }})"
-                                 wire:click.stop="editEvent({{ $event->id }})"
-                                 style="background-color: {{ $event->typeColor }};">
-                                <span class="font-bold opacity-90 mr-1">{{ $event->starts_at->format('H:i') }}</span>
-                                {{ $event->title }}
-                            </div>
+                        @foreach($dayItems->take(4) as $item)
+                            @if($item['type'] === 'event')
+                                <div class="cursor-pointer truncate rounded px-2 py-1 text-[10px] text-white shadow-sm transition-all duration-150 hover:brightness-110 active:scale-95 sm:text-xs"
+                                     draggable="true"
+                                     @dragstart="onDragStart($event, {{ $item['id'] }})"
+                                     wire:click.stop="editEvent({{ $item['id'] }})"
+                                     style="background-color: {{ $item['color'] }};">
+                                    <span class="mr-1 font-bold opacity-90">{{ $item['time_label'] }}</span>
+                                    {{ $item['title'] }}
+                                </div>
+                            @elseif($item['url'])
+                                <a href="{{ $item['url'] }}" wire:navigate wire:click.stop class="block truncate rounded px-2 py-1 text-[10px] text-white shadow-sm transition-all duration-150 hover:brightness-110 sm:text-xs"
+                                   style="background-color: {{ $item['color'] }};">
+                                    <span class="mr-1 font-bold opacity-90">{{ $item['time_label'] }}</span>
+                                    {{ $item['title'] }}
+                                </a>
+                            @else
+                                <div class="truncate rounded px-2 py-1 text-[10px] text-white shadow-sm sm:text-xs"
+                                     style="background-color: {{ $item['color'] }};">
+                                    <span class="mr-1 font-bold opacity-90">{{ $item['time_label'] }}</span>
+                                    {{ $item['title'] }}
+                                </div>
+                            @endif
                         @endforeach
 
-                        @if($dayEvents->count() > 4)
+                        @if($dayItems->count() > 4)
                             <div class="text-[10px] text-zinc-500 dark:text-zinc-400 pl-1 font-medium italic">
-                                +{{ $dayEvents->count() - 4 }} more events
+                                +{{ $dayItems->count() - 4 }} more scheduled
                             </div>
                         @endif
                     </div>

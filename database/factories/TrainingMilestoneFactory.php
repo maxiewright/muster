@@ -6,10 +6,11 @@ namespace Database\Factories;
 
 use App\Enums\MilestoneStatus;
 use App\Models\TrainingGoal;
+use App\Models\TrainingMilestone;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TrainingMilestone>
+ * @extends Factory<TrainingMilestone>
  */
 class TrainingMilestoneFactory extends Factory
 {

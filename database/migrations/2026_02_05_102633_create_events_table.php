@@ -23,6 +23,8 @@ return new class extends Migration
 
         Schema::create('events', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('event_type_id')->constrained()->cascadeOnDelete();
             $table->string('title');
@@ -35,6 +37,8 @@ return new class extends Migration
             $table->softDeletes();
 
             // Production indexes folded into base migration
+            $table->index('organization_id');
+            $table->index('unit_id');
             $table->index('user_id');
             $table->index('starts_at');
             $table->index('ends_at');

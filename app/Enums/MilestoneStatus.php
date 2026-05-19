@@ -14,7 +14,7 @@ enum MilestoneStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Pending => 'Not Started',
             self::InProgress => 'In Progress',
             self::Completed => 'Awaiting Verification',
@@ -25,7 +25,7 @@ enum MilestoneStatus: string
 
     public function icon(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Pending => '○',
             self::InProgress => '◐',
             self::Completed => '●',
@@ -36,7 +36,7 @@ enum MilestoneStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Pending => 'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800',
             self::InProgress => 'border-blue-500 bg-blue-100 dark:bg-blue-900/30',
             self::Completed => 'border-green-500 bg-green-100 dark:bg-green-900/30',

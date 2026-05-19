@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('partner_notifications', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // recipient
             $table->foreignId('from_user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('training_goal_id')->nullable()->constrained('training_goals')->cascadeOnDelete();
@@ -26,6 +28,9 @@ return new class extends Migration
             $table->timestamp('actioned_at')->nullable();
 
             $table->timestamps();
+
+            $table->index('organization_id');
+            $table->index('unit_id');
         });
     }
 

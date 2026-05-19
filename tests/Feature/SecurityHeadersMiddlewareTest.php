@@ -79,7 +79,7 @@ test('content security policy allows vite hot assets when dev server is running'
 
 test('flux assets render with csp nonce attributes', function (): void {
     config()->set('security.csp_enabled', true);
-    User::factory()->lead()->create();
+    User::factory()->platformAdmin()->create();
 
     $response = $this->get(route('home'));
 
@@ -99,4 +99,16 @@ test('training page inline scripts include a csp nonce', function (): void {
     preg_match_all('/<script(?![^>]*\bsrc=)(?![^>]*\bnonce=)[^>]*>/i', $response->getContent(), $matches);
 
     expect($matches[0])->toBeArray()->toHaveCount(0);
+});
+
+test('debugbar assets are not injected into html when csp is enabled', function (): void {
+    config()->set('security.csp_enabled', true);
+    config()->set('app.debug', true);
+    User::factory()->platformAdmin()->create();
+
+    $response = $this->get(route('home'));
+
+    $response->assertOk();
+    $response->assertDontSee('/_debugbar/assets', false);
+    $response->assertDontSee('PhpDebugBar.DebugBar', false);
 });

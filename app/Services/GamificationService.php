@@ -6,26 +6,26 @@ namespace App\Services;
 
 use App\Enums\GamificationPoint;
 use App\Events\BadgeEarned;
+use App\Events\MusterCreated;
 use App\Events\PointsEarned;
-use App\Events\StandupCreated;
 use App\Models\Badge;
-use App\Models\Standup;
+use App\Models\Muster;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class GamificationService
 {
-    public function processCheckin(User $user, Standup $standup): array
+    public function processCheckin(User $user, Muster $muster): array
     {
-        return DB::transaction(function () use ($user, $standup): array {
+        return DB::transaction(function () use ($user, $muster): array {
             // Refresh user with pessimistic lock to prevent concurrent corruption
             $user = User::query()->lockForUpdate()->findOrFail($user->id);
 
             $pointsEarned = [];
 
             // Base check-in points
-            $user->awardPoints(GamificationPoint::Checkin->points(), 'Daily check-in', 'checkin', $standup);
+            $user->awardPoints(GamificationPoint::Checkin->points(), 'Daily check-in', 'checkin', $muster);
             $pointsEarned[] = ['points' => GamificationPoint::Checkin->points(), 'reason' => 'Daily check-in'];
 
             // Update streak
@@ -34,25 +34,25 @@ class GamificationService
             // Streak bonus
             if ($user->current_streak > 1) {
                 $streakBonus = min($user->current_streak * GamificationPoint::StreakBonus->points(), 50); // Cap at 50
-                $user->awardPoints($streakBonus, "{$user->current_streak} day streak!", 'streak_bonus', $standup);
+                $user->awardPoints($streakBonus, "{$user->current_streak} day streak!", 'streak_bonus', $muster);
                 $pointsEarned[] = ['points' => $streakBonus, 'reason' => "{$user->current_streak} day streak!"];
             }
 
             // Early bird bonus (before 9 AM)
             if (now()->hour < 9) {
-                $user->awardPoints(GamificationPoint::EarlyBird->points(), 'Early bird bonus', 'early_bird', $standup);
+                $user->awardPoints(GamificationPoint::EarlyBird->points(), 'Early bird bonus', 'early_bird', $muster);
                 $pointsEarned[] = ['points' => GamificationPoint::EarlyBird->points(), 'reason' => 'Early bird bonus'];
             }
 
             // Blocker shared bonus
-            if (! empty($standup->blockers)) {
-                $user->awardPoints(GamificationPoint::BlockerShared->points(), 'Shared a blocker', 'blocker', $standup);
+            if (! empty($muster->blockers)) {
+                $user->awardPoints(GamificationPoint::BlockerShared->points(), 'Shared a blocker', 'blocker', $muster);
                 $pointsEarned[] = ['points' => GamificationPoint::BlockerShared->points(), 'reason' => 'Shared a blocker'];
             }
 
             $earnedBadges = $this->checkBadges($user);
 
-            broadcast(new StandupCreated($standup))->toOthers();
+            broadcast(new MusterCreated($muster))->toOthers();
             broadcast(new PointsEarned($user->fresh(), array_sum(array_column($pointsEarned, 'points'))))->toOthers();
 
             return [
@@ -99,7 +99,7 @@ class GamificationService
         $badges = Badge::whereIn('slug', $allSlugs)->get()->keyBy('slug');
 
         // First Check-in
-        if ($user->standups()->count() === 1) {
+        if ($user->musters()->count() === 1) {
             $badge = $badges->get('first-muster');
             if ($badge && $user->earnBadge($badge)) {
                 $earnedBadges[] = $badge;
@@ -130,7 +130,7 @@ class GamificationService
         }
 
         // Total check-ins milestone badges
-        $totalCheckins = $user->standups()->count();
+        $totalCheckins = $user->musters()->count();
         if ($totalCheckins >= 100) {
             $badge = $badges->get('hundred-days');
             if ($badge && $user->earnBadge($badge)) {

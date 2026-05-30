@@ -1,5 +1,7 @@
 /.phpunit.cache
 /.playwright-mcp
+/baseline-*.png
+/themed-*.png
 /.superpowers
 /node_modules
 /public/hot

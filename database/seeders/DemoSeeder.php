@@ -70,16 +70,21 @@ class DemoSeeder extends Seeder
 
     private function wipeExistingDemoData(Organization $organization, Unit $unit): void
     {
+        // Order matters: tasks.created_by has on_delete=no action, so tasks
+        // owned by demo users must go before the users themselves. Everything
+        // else is purged by unit scope first, then any leftover users via
+        // email pattern (cascade handles their memberships/musters/goals).
+        TrainingMilestone::query()
+            ->whereIn('training_goal_id', TrainingGoal::query()->where('unit_id', $unit->id)->pluck('id'))
+            ->forceDelete();
+        TrainingGoal::query()->where('unit_id', $unit->id)->forceDelete();
+        Muster::query()->where('unit_id', $unit->id)->forceDelete();
+        Task::query()->where('unit_id', $unit->id)->forceDelete();
+
         User::query()
             ->whereIn('email', ['commander@ttr.demo', 'lead@ttr.demo', 'member@ttr.demo'])
             ->get()
             ->each(fn (User $user) => $user->delete());
-
-        // Defensive: cascade should have cleared these, but soft-deleted musters
-        // on the unit would survive a user purge.
-        Muster::query()->where('unit_id', $unit->id)->forceDelete();
-        Task::query()->where('unit_id', $unit->id)->forceDelete();
-        TrainingGoal::query()->where('unit_id', $unit->id)->forceDelete();
     }
 
     /**
@@ -93,6 +98,7 @@ class DemoSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => Role::Lead->value,
             'organization_id' => $organization->id,
+            'is_platform_admin' => true,
             'email_verified_at' => now(),
         ]);
 

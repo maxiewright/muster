@@ -1,54 +1,53 @@
-<div class="min-h-screen bg-gray-50 dark:bg-zinc-900 py-8">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="mx-auto w-full max-w-4xl space-y-4 sm:space-y-6">
 
         {{-- Header --}}
-        <div class="mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                        {{ $isEditing ? 'Edit Muster' : 'Daily Muster' }}
-                    </h1>
-                    <p class="text-gray-600 dark:text-zinc-400">
-                        {{ now()->format('l, F j, Y') }}
-                    </p>
-                </div>
-                <a href="{{ route('musters') }}" wire:navigate
-                   class="text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </a>
+        <div class="flex items-center justify-between">
+            <div class="min-w-0">
+                <h1 class="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                    {{ $isEditing ? 'Edit Muster' : 'Daily Muster' }}
+                </h1>
+                <p class="text-xs text-gray-600 dark:text-zinc-400 sm:text-sm">
+                    {{ now()->format('l, F j, Y') }}
+                </p>
             </div>
+            <a href="{{ route('musters') }}" wire:navigate
+               class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-gray-500 hover:bg-zinc-100 hover:text-gray-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+               aria-label="Close">
+                <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </a>
         </div>
 
-        {{-- Progress Steps --}}
-        <div class="mb-8">
-            <div class="flex items-center justify-between">
+        {{-- Progress Steps: 44px tappable circles, single-line label that truncates on small phones --}}
+        <div>
+            <div class="flex items-center justify-between gap-1 sm:gap-2">
                 @foreach([1 => 'Yesterday', 2 => 'Today', 3 => 'Wrap Up'] as $step => $label)
-                    <div class="flex items-center {{ $step < 3 ? 'flex-1' : '' }}">
+                    <div class="flex min-w-0 items-center {{ $step < 3 ? 'flex-1' : '' }}">
                         <button
                             wire:click="goToStep({{ $step }})"
                             wire:loading.attr="disabled"
                             type="button"
-                            class="flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200 disabled:opacity-50
+                            class="flex size-11 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 disabled:opacity-50
                                 {{ $currentStep === $step ? 'border-blue-500 bg-blue-500 text-white' : '' }}
                                 {{ $currentStep > $step ? 'border-green-500 bg-green-500 text-white' : '' }}
                                 {{ $currentStep < $step ? 'border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-400 dark:text-zinc-500' : '' }}"
+                            aria-label="Step {{ $step }}: {{ $label }}"
                         >
                             @if($currentStep > $step)
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                             @else
                                 <span class="font-semibold">{{ $step }}</span>
                             @endif
                         </button>
-                        <span class="ml-3 text-sm font-medium {{ $currentStep >= $step ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-zinc-400' }}">
+                        <span class="ml-2 truncate text-xs font-medium sm:ml-3 sm:text-sm {{ $currentStep >= $step ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-zinc-400' }}">
                             {{ $label }}
                         </span>
                     </div>
                     @if($step < 3)
-                        <div class="flex-1 h-0.5 mx-4 {{ $currentStep > $step ? 'bg-green-500' : 'bg-gray-300 dark:bg-zinc-700' }}"></div>
+                        <div class="h-0.5 flex-1 {{ $currentStep > $step ? 'bg-green-500' : 'bg-gray-300 dark:bg-zinc-700' }}"></div>
                     @endif
                 @endforeach
             </div>

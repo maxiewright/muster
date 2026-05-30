@@ -1,63 +1,67 @@
-<div class="space-y-6 p-4 sm:p-6 lg:p-8" x-data="{ hoveredCard: null }">
+<div class="space-y-4 sm:space-y-6" x-data="{ hoveredCard: null }">
     {{-- HUD Mission Control Header --}}
-    <div class="glass-card tactical-glow relative overflow-hidden p-5 sm:p-6">
+    <div class="glass-card tactical-glow relative overflow-hidden p-4 sm:p-6">
         <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.28),transparent_45%)]"></div>
         <div class="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_0%,rgba(245,158,11,0.12)_38%,transparent_76%)]"></div>
 
-        <div class="relative grid gap-6 lg:grid-cols-3">
+        <div class="relative grid gap-5 lg:grid-cols-3 lg:gap-6">
             <div class="space-y-3 lg:col-span-2">
                 <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center rounded-full border border-emerald-600/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <span class="inline-flex items-center rounded-full border border-emerald-600/20 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-400">
                         <span class="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
                         Operational
                     </span>
                 </div>
-                <h1 class="text-2xl font-semibold text-slate-900 dark:text-zinc-50 sm:text-3xl">Mission Control</h1>
-                <p class="max-w-2xl text-sm text-slate-500 dark:text-zinc-400">
+                <h1 class="text-xl font-semibold text-slate-900 dark:text-zinc-50 sm:text-3xl">Mission Control</h1>
+                <p class="max-w-2xl text-xs text-slate-500 dark:text-zinc-400 sm:text-sm">
                     Coordinate your squad, clear blockers fast, and stack points with consistent execution.
-                    {{ now()->format('l, F j, Y') }}
+                    <span class="block sm:inline">{{ now()->format('l, F j, Y') }}</span>
                 </p>
 
-                {{-- HUD Stats Grid --}}
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" x-data="{ animatedStreak: 0, animatedPoints: 0, animatedCheckins: 0, animatedTasks: 0 }" x-init="
+                {{-- Stats: horizontal 4-col on every breakpoint, tighter gutters on mobile --}}
+                <div class="grid grid-cols-4 gap-2 sm:gap-3" x-data="{ animatedStreak: 0, animatedPoints: 0, animatedCheckins: 0, animatedTasks: 0 }" x-init="
                     setTimeout(() => { let s = {{ auth()->user()->current_streak ?? 0 }}; let i = 0; let t = setInterval(() => { animatedStreak = ++i; if(i>=s) clearInterval(t); }, 40); }, 100);
                     setTimeout(() => { let s = {{ auth()->user()->points ?? 0 }}; let i = 0; let step = Math.max(1, Math.floor(s/30)); let t = setInterval(() => { i = Math.min(i+step, s); animatedPoints = i; if(i>=s) clearInterval(t); }, 30); }, 200);
                     setTimeout(() => { animatedCheckins = {{ $todaysMusters->count() }}; }, 300);
                     setTimeout(() => { animatedTasks = {{ $activeTasks->count() }}; }, 400);
                 ">
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Streak</p>
-                        <p class="text-xl font-bold text-amber-600 dark:text-amber-300" x-text="animatedStreak + ' days'"></p>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 sm:p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
+                        <p class="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Streak</p>
+                        <p class="text-lg sm:text-xl font-bold text-amber-600 dark:text-amber-300 tabular-nums" x-text="animatedStreak"></p>
+                        <p class="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-400">days</p>
                     </div>
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Points</p>
-                        <p class="text-xl font-bold text-emerald-600 dark:text-emerald-300" x-text="animatedPoints.toLocaleString()"></p>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 sm:p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
+                        <p class="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Points</p>
+                        <p class="text-lg sm:text-xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums" x-text="animatedPoints.toLocaleString()"></p>
+                        <p class="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-400">XP</p>
                     </div>
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Today's Ops</p>
-                        <p class="text-xl font-bold text-sky-600 dark:text-sky-300" x-text="animatedCheckins + ' check-ins'"></p>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 sm:p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
+                        <p class="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Check-ins</p>
+                        <p class="text-lg sm:text-xl font-bold text-sky-600 dark:text-sky-300 tabular-nums" x-text="animatedCheckins"></p>
+                        <p class="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-400">today</p>
                     </div>
-                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Active Missions</p>
-                        <p class="text-xl font-bold text-violet-600 dark:text-violet-300" x-text="animatedTasks + ' tasks'"></p>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 sm:p-3 dark:border-zinc-700/50 dark:bg-zinc-900/60">
+                        <p class="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500">Missions</p>
+                        <p class="text-lg sm:text-xl font-bold text-violet-600 dark:text-violet-300 tabular-nums" x-text="animatedTasks"></p>
+                        <p class="text-[9px] sm:text-[10px] text-slate-500 dark:text-zinc-400">active</p>
                     </div>
                 </div>
             </div>
 
-            {{-- Quick Actions --}}
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            {{-- Quick Actions: full-width buttons on mobile, side panel on desktop --}}
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-1">
                 <a href="{{ $myMuster ? route('muster.edit', $myMuster) : route('muster.create') }}" wire:navigate
-                   class="flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 active:scale-[0.98]">
+                   class="flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 active:scale-[0.98]">
                     <flux:icon.shield-check class="size-4" />
                     {{ $myMuster ? 'Update Muster' : 'Start Muster' }}
                 </a>
                 <a href="{{ route('tasks') }}" wire:navigate
-                   class="flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-sky-600/80 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-500/80 active:scale-[0.98]">
+                   class="flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-sky-600/80 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-500/80 active:scale-[0.98]">
                     <flux:icon.clipboard-list class="size-4" />
                     Open Task Board
                 </a>
                 <a href="{{ route('training.dashboard') }}" wire:navigate
-                   class="flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-200 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700/80 active:scale-[0.98]">
+                   class="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-200 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700/80 active:scale-[0.98]">
                     <flux:icon.graduation-cap class="size-4" />
                     Training Ops
                 </a>

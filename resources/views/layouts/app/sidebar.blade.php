@@ -101,9 +101,22 @@
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
         </flux:sidebar>
 
-        <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
-            <flux:sidebar.toggle class="lg:hidden min-h-[44px] min-w-[44px]" icon="menu" inset="left" />
+        {{-- Mobile slim header: brand-left, notifications + profile-right. No hamburger;
+             bottom tab nav handles primary navigation. --}}
+        <flux:header class="lg:hidden border-b border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md">
+            <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-2 min-h-[44px] px-1">
+                <span class="inline-flex h-8 w-8 items-center justify-center">
+                    <x-app-logo-icon />
+                </span>
+                @if(isset($activeUnit) && $activeUnit)
+                    <div class="flex min-w-0 flex-col leading-tight">
+                        <span class="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">{{ $activeUnit->organization->name }}</span>
+                        <span class="truncate text-sm font-semibold text-zinc-800 dark:text-zinc-100">{{ $activeUnit->name }}</span>
+                    </div>
+                @else
+                    <span class="text-base font-semibold text-zinc-800 dark:text-zinc-100">{{ config('app.name', 'Muster') }}</span>
+                @endif
+            </a>
 
             <flux:spacer />
 
@@ -113,6 +126,7 @@
                 <flux:profile
                     :initials="auth()->user()->initials()"
                     icon-trailing="chevron-down"
+                    class="min-h-[44px]"
                 />
 
                 <flux:menu>
@@ -132,9 +146,33 @@
                         </div>
                     </flux:menu.radio.group>
 
+                    @if(isset($availableUnits) && $availableUnits->count() > 1)
+                        <flux:menu.separator />
+                        <flux:menu.radio.group>
+                            <flux:menu.submenu heading="{{ __('Switch unit') }}" icon="building-office-2">
+                                @foreach($availableUnits as $unit)
+                                    <form method="POST" action="{{ route('units.active') }}" class="w-full">
+                                        @csrf
+                                        <input type="hidden" name="unit_id" value="{{ $unit->id }}">
+                                        <flux:menu.item
+                                            as="button"
+                                            type="submit"
+                                            :icon="$activeUnit?->id === $unit->id ? 'check' : ''"
+                                            class="w-full cursor-pointer">
+                                            {{ $unit->name }}
+                                        </flux:menu.item>
+                                    </form>
+                                @endforeach
+                            </flux:menu.submenu>
+                        </flux:menu.radio.group>
+                    @endif
+
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
+                        <flux:menu.item :href="route('gamification')" icon="trophy" wire:navigate>
+                            {{ __('Achievements') }}
+                        </flux:menu.item>
                         <flux:menu.item :href="route('profile.edit')" icon="settings" wire:navigate>
                             {{ __('Settings') }}
                         </flux:menu.item>

@@ -65,7 +65,8 @@
                         @if($task->canBeEditedBy(auth()->user()))
                             <button type="button"
                                     wire:click="toggleSubtaskComplete({{ $subtask->id }})"
-                                    class="flex-shrink-0 p-2 rounded focus:outline-none focus:ring-2 focus:ring-zinc-400 min-h-[44px] min-w-[44px]">
+                                    wire:loading.attr="disabled"
+                                    class="flex-shrink-0 p-2 rounded focus:outline-none focus:ring-2 focus:ring-zinc-400 min-h-[44px] min-w-[44px] disabled:opacity-50 transition-opacity">
                                 @if($subtask->status === \App\Enums\TaskStatus::Completed)
                                     <flux:icon name="circle-check" variant="mini" class="text-green-500 size-5" />
                                 @else

@@ -14,12 +14,15 @@ test('repository uses canonical muster naming', function (): void {
         ->in($repositoryRoot)
         ->exclude([
             '.git',
+            '.claude',
+            '.gemini',
             'vendor',
             'node_modules',
             'storage',
             'bootstrap/cache',
         ])
-        ->name($patterns);
+        ->name($patterns)
+        ->notName('RepositoryCanonicalNamingTest.php');
 
     $legacyMatches = collect(iterator_to_array($files))
         ->map(function (SplFileInfo $file) use ($legacyPattern): ?string {

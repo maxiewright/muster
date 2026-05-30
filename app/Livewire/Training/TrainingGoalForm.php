@@ -8,14 +8,13 @@ use App\Enums\MilestoneStatus;
 use App\Enums\PartnerStatus;
 use App\Enums\TrainingCategory;
 use App\Enums\TrainingGoalStatus;
+use App\Livewire\Forms\GoalForm;
 use App\Models\FocusArea;
 use App\Models\PartnerNotification;
 use App\Models\TrainingGoal;
-use App\Models\TrainingMilestone;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -23,37 +22,16 @@ class TrainingGoalForm extends Component
 {
     public ?TrainingGoal $goal = null;
 
+    public GoalForm $form;
+
     public bool $isEditing = false;
 
     public int $step = 1;
 
-    public string $title = '';
-
-    public string $description = '';
-
-    public string $success_criteria = '';
-
-    public ?string $category = null;
-
-    public ?int $focus_area_id = null;
-
-    public ?string $start_date = null;
-
-    public ?string $target_date = null;
-
-    public ?int $accountability_partner_id = null;
-
-    public bool $is_public = true;
-
-    /** @var array<int, array{title:string, target_date:string|null}> */
-    public array $milestones = [
-        ['title' => '', 'target_date' => null],
-    ];
-
     public function mount(?TrainingGoal $goal = null): void
     {
-        $this->start_date = now()->toDateString();
-        $this->target_date = now()->addMonth()->toDateString();
+        $this->form->start_date = now()->toDateString();
+        $this->form->target_date = now()->addMonth()->toDateString();
 
         if ($goal instanceof TrainingGoal) {
             abort_unless($goal->canBeEditedBy(Auth::user()), 403);
@@ -61,26 +39,7 @@ class TrainingGoalForm extends Component
             $this->goal = $goal->load('milestones');
             $this->isEditing = true;
 
-            $this->title = $goal->title;
-            $this->description = (string) ($goal->description ?? '');
-            $this->success_criteria = (string) ($goal->success_criteria ?? '');
-            $this->category = $goal->category?->value;
-            $this->focus_area_id = $goal->focus_area_id;
-            $this->start_date = $goal->start_date?->toDateString();
-            $this->target_date = $goal->target_date?->toDateString();
-            $this->accountability_partner_id = $goal->accountability_partner_id;
-            $this->is_public = (bool) $goal->is_public;
-
-            $milestones = $goal->milestones
-                ->sortBy('order')
-                ->map(fn (TrainingMilestone $milestone): array => [
-                    'title' => $milestone->title,
-                    'target_date' => $milestone->target_date?->toDateString(),
-                ])
-                ->values()
-                ->all();
-
-            $this->milestones = $milestones !== [] ? $milestones : [['title' => '', 'target_date' => null]];
+            $this->form->setGoal($goal);
         }
     }
 
@@ -118,18 +77,18 @@ class TrainingGoalForm extends Component
 
     public function addMilestone(): void
     {
-        $this->milestones[] = ['title' => '', 'target_date' => null];
+        $this->form->milestones[] = ['title' => '', 'target_date' => null];
     }
 
     public function removeMilestone(int $index): void
     {
-        unset($this->milestones[$index]);
+        unset($this->form->milestones[$index]);
 
-        if ($this->milestones === []) {
-            $this->milestones[] = ['title' => '', 'target_date' => null];
+        if ($this->form->milestones === []) {
+            $this->form->milestones[] = ['title' => '', 'target_date' => null];
         }
 
-        $this->milestones = array_values($this->milestones);
+        $this->form->milestones = array_values($this->form->milestones);
     }
 
     public function nextStep(): void
@@ -155,45 +114,26 @@ class TrainingGoalForm extends Component
 
         abort_unless($activeUnit instanceof Unit, 403);
 
-        // Re-verify authorization at save time (not just mount) to guard against state manipulation.
         if ($this->isEditing && $this->goal) {
             abort_unless($this->goal->canBeEditedBy($user), 403);
         }
 
-        $this->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
-            'success_criteria' => ['required', 'string'],
-            'category' => ['required', 'string'],
-            'focus_area_id' => ['required', 'integer', 'exists:focus_areas,id'],
-            'start_date' => ['required', 'date'],
-            'target_date' => ['required', 'date', 'after_or_equal:start_date'],
-            'accountability_partner_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('unit_memberships', 'user_id')
-                    ->where('unit_id', $activeUnit->id),
-            ],
-            'milestones' => ['array'],
-            'milestones.*.title' => ['nullable', 'string', 'max:255'],
-            'milestones.*.target_date' => ['nullable', 'date'],
-            'is_public' => ['boolean'],
-        ]);
+        $this->form->validate();
 
         $payload = [
             'organization_id' => $user->organization_id,
             'unit_id' => $activeUnit->id,
-            'title' => $this->title,
-            'description' => $this->description,
-            'success_criteria' => $this->success_criteria,
-            'category' => $this->category,
-            'focus_area_id' => $this->focus_area_id,
-            'start_date' => $this->start_date,
-            'target_date' => $this->target_date,
-            'accountability_partner_id' => $this->accountability_partner_id,
-            'is_public' => $this->is_public,
+            'title' => $this->form->title,
+            'description' => $this->form->description,
+            'success_criteria' => $this->form->success_criteria,
+            'category' => $this->form->category,
+            'focus_area_id' => $this->form->focus_area_id,
+            'start_date' => $this->form->start_date,
+            'target_date' => $this->form->target_date,
+            'accountability_partner_id' => $this->form->accountability_partner_id,
+            'is_public' => $this->form->is_public,
             'status' => TrainingGoalStatus::Active,
-            'partner_status' => $this->accountability_partner_id ? PartnerStatus::Pending : PartnerStatus::None,
+            'partner_status' => $this->form->accountability_partner_id ? PartnerStatus::Pending : PartnerStatus::None,
         ];
 
         if ($this->isEditing && $this->goal) {
@@ -205,7 +145,7 @@ class TrainingGoalForm extends Component
             $goal = $user->trainingGoals()->create($payload);
         }
 
-        $rows = collect($this->milestones)
+        $rows = collect($this->form->milestones)
             ->filter(fn (array $milestone): bool => trim($milestone['title'] ?? '') !== '')
             ->values();
 
@@ -250,18 +190,18 @@ class TrainingGoalForm extends Component
     {
         if ($step === 1) {
             $this->validate([
-                'title' => ['required', 'string', 'max:255'],
-                'category' => ['required', 'string'],
-                'focus_area_id' => ['required', 'integer', 'exists:focus_areas,id'],
-                'start_date' => ['required', 'date'],
-                'target_date' => ['required', 'date', 'after_or_equal:start_date'],
+                'form.title' => ['required', 'string', 'max:255'],
+                'form.category' => ['required', 'string'],
+                'form.focus_area_id' => ['required', 'integer', 'exists:focus_areas,id'],
+                'form.start_date' => ['required', 'date'],
+                'form.target_date' => ['required', 'date', 'after_or_equal:form.start_date'],
             ]);
         }
 
         if ($step === 2) {
             $this->validate([
-                'description' => ['required', 'string'],
-                'success_criteria' => ['required', 'string'],
+                'form.description' => ['required', 'string'],
+                'form.success_criteria' => ['required', 'string'],
             ]);
         }
     }

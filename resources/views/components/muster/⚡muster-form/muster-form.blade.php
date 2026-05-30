@@ -28,8 +28,9 @@
                     <div class="flex items-center {{ $step < 3 ? 'flex-1' : '' }}">
                         <button
                             wire:click="goToStep({{ $step }})"
+                            wire:loading.attr="disabled"
                             type="button"
-                            class="flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200
+                            class="flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200 disabled:opacity-50
                                 {{ $currentStep === $step ? 'border-blue-500 bg-blue-500 text-white' : '' }}
                                 {{ $currentStep > $step ? 'border-green-500 bg-green-500 text-white' : '' }}
                                 {{ $currentStep < $step ? 'border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-400 dark:text-zinc-500' : '' }}"
@@ -85,6 +86,7 @@
                                         <div class="flex-shrink-0 pt-0.5">
                                             <flux:checkbox :checked="$isCompleted"
                                                           wire:click="toggleCompleted({{ $task->id }})"
+                                                          wire:loading.attr="disabled"
                                                           class="!cursor-pointer"
                                                           aria-label="Mark {{ $task->title }} as {{ $isCompleted ? 'not complete' : 'complete' }}" />
                                         </div>
@@ -108,8 +110,9 @@
                                     {{-- Action Buttons --}}
                                     <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-zinc-700">
                                         <button wire:click="toggleCompleted({{ $task->id }})"
+                                                wire:loading.attr="disabled"
                                                 type="button"
-                                                class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg transition
+                                                class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg transition disabled:opacity-50
                                                     {{ $isCompleted
                                                         ? 'bg-green-500 text-white'
                                                         : 'bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-green-100 dark:hover:bg-green-900/30' }}">
@@ -120,8 +123,9 @@
                                         </button>
 
                                         <button wire:click="toggleCarriedOver({{ $task->id }})"
+                                                wire:loading.attr="disabled"
                                                 type="button"
-                                                class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg transition
+                                                class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg transition disabled:opacity-50
                                                     {{ $isCarriedOver && !$isCompleted
                                                         ? 'bg-amber-500 text-white'
                                                         : 'bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 hover:bg-amber-100 dark:hover:bg-amber-900/30' }}"
@@ -180,8 +184,8 @@
                 {{-- Step 1 Footer --}}
                 <div class="px-6 sm:px-8 py-4 bg-gray-50 dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700">
                     <div class="flex justify-end">
-                        <button wire:click="nextStep" type="button"
-                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
+                        <button wire:click="nextStep" type="button" wire:loading.attr="disabled"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50">
                             Continue to Today's Plan
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -208,7 +212,7 @@
                         <h3 class="text-sm font-medium text-blue-900 dark:text-blue-100 mb-3">Quick Create Task</h3>
                         <form wire:submit="createQuickTask" class="flex flex-col sm:flex-row gap-2">
                             <flux:input
-                                wire:model="newTaskTitle"
+                                wire:model="form.newTaskTitle"
                                 placeholder="Enter task title..."
                                 class="flex-1 min-w-0"
                             />
@@ -217,7 +221,7 @@
                                 Add
                             </flux:button>
                         </form>
-                        @error('newTaskTitle')
+                        @error('form.newTaskTitle')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -269,21 +273,24 @@
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <button wire:click="startTaskToOngoing({{ $task->id }})"
+                                                    wire:loading.attr="disabled"
                                                     type="button"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800/50 transition"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800/50 transition disabled:opacity-50"
                                                     title="Start working on this task">
                                                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
                                                 Start
                                             </button>
                                             <button wire:click="toggleBlocked({{ $task->id }})"
+                                                    wire:loading.attr="disabled"
                                                     type="button"
-                                                    class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 transition"
+                                                    class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-zinc-600 transition disabled:opacity-50"
                                                     title="{{ $isBlocked ? 'Remove blocker' : 'Mark as blocked' }}">
                                                 <span class="text-sm">{{ $isBlocked ? '🚧' : '⚠️' }}</span>
                                             </button>
                                             <button wire:click="removeFromPlanned({{ $task->id }})"
+                                                    wire:loading.attr="disabled"
                                                     type="button"
-                                                    class="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-gray-200 dark:hover:bg-zinc-600 transition"
+                                                    class="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-gray-200 dark:hover:bg-zinc-600 transition disabled:opacity-50"
                                                     title="Remove from today">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -315,6 +322,7 @@
                             @foreach($this->backlogTasks as $task)
                                 <div wire:key="backlog-{{ $task->id }}"
                                      wire:click="togglePlanned({{ $task->id }})"
+                                     wire:loading.class="opacity-50 pointer-events-none"
                                      class="flex items-center gap-4 p-3 rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-700 cursor-pointer transition">
                                     <div class="flex-shrink-0">
                                         <div class="w-5 h-5 rounded border-2 border-gray-300 dark:border-zinc-600 flex items-center justify-center">
@@ -425,11 +433,11 @@
                                 Any impediments or challenges preventing progress?
                             </flux:text>
                             <flux:textarea
-                                wire:model="blockers"
+                                wire:model="form.blockers"
                                 rows="3"
                                 placeholder="Describe any blockers you're facing..."
                             />
-                            <flux:error name="blockers" />
+                            <flux:error name="form.blockers" />
                         </flux:field>
                     </div>
 
@@ -440,10 +448,11 @@
                         </label>
                         <div class="grid grid-cols-5 gap-3">
                             @foreach($moods as $moodOption)
-                                <button wire:click="$set('mood', '{{ $moodOption->value }}')"
+                                <button wire:click="$set('form.mood', '{{ $moodOption->value }}')"
                                         type="button"
-                                        class="flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900
-                                            {{ $mood === $moodOption->value
+                                        wire:loading.attr="disabled"
+                                        class="flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900
+                                            {{ $form->mood === $moodOption->value
                                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
                                                 : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600' }}">
                                     <span class="text-3xl mb-2">{{ $moodOption->emoji() }}</span>
@@ -453,7 +462,7 @@
                                 </button>
                             @endforeach
                         </div>
-                        @error('mood')
+                        @error('form.mood')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

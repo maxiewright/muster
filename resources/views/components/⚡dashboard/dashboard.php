@@ -83,14 +83,14 @@ new class extends Component
 
         return view('components.⚡dashboard.dashboard', [
             'todaysMusters' => Muster::query()
-                ->with(['user', 'focusAreas', 'musterTasks.task'])
+                ->with(['user', 'focusAreas', 'musterTasks.task.assignee'])
                 ->inUnit($activeUnitId)
                 ->whereDate('date', today())
                 ->latest()
                 ->get(),
 
             'teamUpdates' => Muster::query()
-                ->with(['user', 'musterTasks.task'])
+                ->with(['user', 'musterTasks.task.assignee'])
                 ->inUnit($activeUnitId)
                 ->whereDate('date', today())
                 ->where('user_id', '!=', $user->id)
@@ -107,7 +107,7 @@ new class extends Component
                 ->get(),
 
             'activeTasks' => Task::query()
-                ->with(['assignee'])
+                ->with(['assignee', 'creator'])
                 ->inUnit($activeUnitId)
                 ->where(function ($q) use ($user): void {
                     $q->where('assigned_to', $user->id)

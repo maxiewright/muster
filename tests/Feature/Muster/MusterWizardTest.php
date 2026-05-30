@@ -136,7 +136,7 @@ it('filters backlog tasks by search', function (): void {
 it('creates quick task', function (): void {
     Livewire::test('muster.muster-form')
         ->call('nextStep')
-        ->set('newTaskTitle', 'New urgent task')
+        ->set('form.newTaskTitle', 'New urgent task')
         ->call('createQuickTask')
         ->assertHasNoErrors();
 
@@ -153,9 +153,9 @@ it('does not create quick task with empty title', function (): void {
 
     Livewire::test('muster.muster-form')
         ->call('nextStep')
-        ->set('newTaskTitle', '')
+        ->set('form.newTaskTitle', '')
         ->call('createQuickTask')
-        ->assertHasErrors('newTaskTitle');
+        ->assertHasErrors('form.newTaskTitle');
 
     expect(Task::count())->toBe($initialCount);
 });
@@ -165,9 +165,9 @@ it('does not create quick task with whitespace-only title', function (): void {
 
     Livewire::test('muster.muster-form')
         ->call('nextStep')
-        ->set('newTaskTitle', '   ')
+        ->set('form.newTaskTitle', '   ')
         ->call('createQuickTask')
-        ->assertHasErrors('newTaskTitle');
+        ->assertHasErrors('form.newTaskTitle');
 
     expect(Task::count())->toBe($initialCount);
 });
@@ -218,16 +218,16 @@ it('displays mood selector in step 3', function (): void {
 it('allows setting mood', function (): void {
     Livewire::test('muster.muster-form')
         ->call('goToStep', 3)
-        ->set('mood', Mood::Firing->value)
-        ->assertSet('mood', Mood::Firing->value);
+        ->set('form.mood', Mood::Firing->value)
+        ->assertSet('form.mood', Mood::Firing->value);
 });
 
 it('validates blockers max length', function (): void {
     Livewire::test('muster.muster-form')
         ->call('goToStep', 3)
-        ->set('blockers', str_repeat('a', 1001))
+        ->set('form.blockers', str_repeat('a', 1001))
         ->call('submitMuster')
-        ->assertHasErrors('blockers');
+        ->assertHasErrors('form.blockers');
 });
 
 it('submits muster successfully', function (): void {
@@ -246,8 +246,8 @@ it('submits muster successfully', function (): void {
     Livewire::test('muster.muster-form')
         ->set('completedTaskIds', [$completedTask->id])
         ->set('plannedTaskIds', [$plannedTask->id])
-        ->set('blockers', 'Waiting for API documentation')
-        ->set('mood', Mood::Steady->value)
+        ->set('form.blockers', 'Waiting for API documentation')
+        ->set('form.mood', Mood::Steady->value)
         ->call('submitMuster')
         ->assertSee('Muster Complete!');
 
@@ -294,7 +294,7 @@ it('updates task statuses correctly after submission', function (): void {
     Livewire::test('muster.muster-form')
         ->set('completedTaskIds', [$completedTask->id])
         ->set('plannedTaskIds', [$plannedTask->id])
-        ->set('mood', Mood::Strong->value)
+        ->set('form.mood', Mood::Strong->value)
         ->call('submitMuster');
 
     expect($completedTask->fresh()->status)->toBe(TaskStatus::Completed);
@@ -311,7 +311,7 @@ it('handles blocked tasks correctly', function (): void {
     Livewire::test('muster.muster-form')
         ->set('plannedTaskIds', [$blockedTask->id])
         ->set('blockedTaskIds', [$blockedTask->id])
-        ->set('mood', Mood::Blocked->value)
+        ->set('form.mood', Mood::Blocked->value)
         ->call('submitMuster');
 
     $muster = Muster::where('user_id', $this->user->id)
@@ -329,8 +329,8 @@ it('handles blocked tasks correctly', function (): void {
 
 it('can submit muster without tasks', function (): void {
     Livewire::test('muster.muster-form')
-        ->set('blockers', 'No blockers today')
-        ->set('mood', Mood::Firing->value)
+        ->set('form.blockers', 'No blockers today')
+        ->set('form.mood', Mood::Firing->value)
         ->call('submitMuster')
         ->assertSee('Muster Complete!');
 
@@ -344,8 +344,8 @@ it('can submit muster without tasks', function (): void {
 
 it('can submit muster without blockers and mood', function (): void {
     Livewire::test('muster.muster-form')
-        ->set('blockers', '')
-        ->set('mood')
+        ->set('form.blockers', '')
+        ->set('form.mood', null)
         ->call('submitMuster')
         ->assertSee('Muster Complete!');
 
@@ -382,7 +382,7 @@ it('persists ongoing tasks on submit', function (): void {
 
     Livewire::test('muster.muster-form')
         ->set('ongoingTaskIds', [$task->id])
-        ->set('mood', Mood::Steady->value)
+        ->set('form.mood', Mood::Steady->value)
         ->call('submitMuster')
         ->assertSee('Muster Complete!');
 
@@ -406,7 +406,7 @@ it('forbids submitting muster with another users task ids', function (): void {
 
     Livewire::test('muster.muster-form')
         ->set('plannedTaskIds', [$foreignTask->id])
-        ->set('mood', Mood::Steady->value)
+        ->set('form.mood', Mood::Steady->value)
         ->call('submitMuster')
         ->assertForbidden();
 

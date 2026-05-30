@@ -8,6 +8,7 @@ use App\Enums\Mood;
 use App\Enums\MusterTaskStatus;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Livewire\Forms\DailyMusterForm;
 use App\Models\Muster;
 use App\Models\Task;
 use App\Models\User;
@@ -17,7 +18,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Validate;
 
 trait InteractsWithMusterForm
 {
@@ -40,14 +40,7 @@ trait InteractsWithMusterForm
 
     public array $blockedTaskIds = [];
 
-    #[Validate('nullable|string|max:1000')]
-    public string $blockers = '';
-
-    #[Validate('nullable|string|in:firing,steady,strong,struggling,blocked')]
-    public ?string $mood = null;
-
-    #[Validate('required|string|max:255', as: 'task title')]
-    public string $newTaskTitle = '';
+    public DailyMusterForm $form;
 
     public string $taskSearch = '';
 
@@ -86,8 +79,8 @@ trait InteractsWithMusterForm
             return;
         }
 
-        $this->blockers = $this->muster->blockers ?? '';
-        $this->mood = $this->muster->mood?->value;
+        $this->form->blockers = $this->muster->blockers ?? '';
+        $this->form->mood = $this->muster->mood?->value;
 
         foreach ($this->muster->tasks as $task) {
             $pivotStatus = $task->pivot->status;
@@ -283,13 +276,13 @@ trait InteractsWithMusterForm
 
     public function createQuickTask(): void
     {
-        $this->newTaskTitle = trim($this->newTaskTitle);
-        $this->validateOnly('newTaskTitle');
+        $this->form->newTaskTitle = trim($this->form->newTaskTitle);
+        $this->form->validateOnly('newTaskTitle');
 
         $task = Task::create([
             'organization_id' => Auth::user()?->activeUnit()?->organization_id,
             'unit_id' => Auth::user()?->activeUnitId(),
-            'title' => $this->newTaskTitle,
+            'title' => $this->form->newTaskTitle,
             'assigned_to' => Auth::id(),
             'created_by' => Auth::id(),
             'status' => TaskStatus::Todo,
@@ -297,7 +290,7 @@ trait InteractsWithMusterForm
         ]);
 
         $this->plannedTaskIds[] = $task->id;
-        $this->newTaskTitle = '';
+        $this->form->newTaskTitle = '';
 
         unset($this->backlogTasks);
 
@@ -333,10 +326,8 @@ trait InteractsWithMusterForm
 
     public function submitMuster(): void
     {
-        $this->validate([
-            'blockers' => 'nullable|string|max:1000',
-            'mood' => 'nullable|string|in:firing,steady,strong,struggling,blocked',
-        ]);
+        $this->form->validateOnly('blockers');
+        $this->form->validateOnly('mood');
 
         $user = Auth::user();
         $isNew = ! $this->isEditing;
@@ -344,8 +335,8 @@ trait InteractsWithMusterForm
         DB::transaction(function () use ($user): void {
             if ($this->isEditing && $this->muster) {
                 $this->muster->update([
-                    'blockers' => $this->blockers ?: null,
-                    'mood' => $this->mood,
+                    'blockers' => $this->form->blockers ?: null,
+                    'mood' => $this->form->mood,
                 ]);
 
                 DB::table('muster_task')
@@ -357,8 +348,8 @@ trait InteractsWithMusterForm
                     'unit_id' => $user->activeUnitId(),
                     'user_id' => $user->id,
                     'date' => today(),
-                    'blockers' => $this->blockers ?: null,
-                    'mood' => $this->mood,
+                    'blockers' => $this->form->blockers ?: null,
+                    'mood' => $this->form->mood,
                 ]);
             }
 

@@ -49,14 +49,14 @@ it('rejects selecting an accountability partner outside the active unit', functi
     session(['active_unit_id' => $alphaUnit->id]);
 
     Livewire::test(TrainingGoalForm::class)
-        ->set('title', 'Tenant-safe goal')
-        ->set('category', TrainingCategory::Technical->value)
-        ->set('focus_area_id', $focusArea->id)
-        ->set('start_date', now()->toDateString())
-        ->set('target_date', now()->addWeek()->toDateString())
-        ->set('description', 'Keep training scoped to the active unit.')
-        ->set('success_criteria', 'Only active-unit members can be selected as partners.')
-        ->set('accountability_partner_id', $outOfUnitPartner->id)
+        ->set('form.title', 'Tenant-safe goal')
+        ->set('form.category', TrainingCategory::Technical->value)
+        ->set('form.focus_area_id', $focusArea->id)
+        ->set('form.start_date', now()->toDateString())
+        ->set('form.target_date', now()->addWeek()->toDateString())
+        ->set('form.description', 'Keep training scoped to the active unit.')
+        ->set('form.success_criteria', 'Only active-unit members can be selected as partners.')
+        ->set('form.accountability_partner_id', $outOfUnitPartner->id)
         ->call('save')
-        ->assertHasErrors('accountability_partner_id');
+        ->assertHasErrors('form.accountability_partner_id');
 });

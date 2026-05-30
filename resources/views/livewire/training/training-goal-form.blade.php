@@ -67,17 +67,17 @@
                             </p>
                         </div>
 
-                        <flux:input wire:model="title" :label="__('Goal Title')" placeholder="e.g. Master Laravel Eloquent Relationships" required />
+                        <flux:input wire:model="form.title" :label="__('Goal Title')" placeholder="e.g. Master Laravel Eloquent Relationships" required />
 
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <flux:select wire:model="category" :label="__('Category')" required>
+                            <flux:select wire:model="form.category" :label="__('Category')" required>
                                 <option value="">{{ __('Select a category') }}</option>
                                 @foreach($this->categories as $choice)
                                     <option value="{{ $choice->value }}">{{ $choice->icon() }} {{ $choice->label() }}</option>
                                 @endforeach
                             </flux:select>
 
-                            <flux:select wire:model="focus_area_id" :label="__('Focus Area')" required>
+                            <flux:select wire:model="form.focus_area_id" :label="__('Focus Area')" required>
                                 <option value="">{{ __('Select a focus area') }}</option>
                                 @foreach($this->focusAreas as $area)
                                     <option value="{{ $area->id }}">{{ $area->name }}</option>
@@ -86,8 +86,8 @@
                         </div>
 
                         <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <flux:input type="date" wire:model="start_date" :label="__('Start Date')" required />
-                            <flux:input type="date" wire:model="target_date" :label="__('Target Date')" required />
+                            <flux:input type="date" wire:model="form.start_date" :label="__('Start Date')" required />
+                            <flux:input type="date" wire:model="form.target_date" :label="__('Target Date')" required />
                         </div>
                     </div>
                 @endif
@@ -103,9 +103,9 @@
                             </p>
                         </div>
 
-                        <flux:textarea wire:model="description" :label="__('Detailed Overview')" placeholder="What exactly do you want to achieve?" required />
-                        <flux:textarea wire:model="success_criteria" :label="__('Success Criteria')" placeholder="How will you know you've achieved this goal?" required />
-                        <flux:checkbox wire:model="is_public" :label="__('Make this goal visible to the team')" description="{{ __('Team leads can always see goals.') }}" />
+                        <flux:textarea wire:model="form.description" :label="__('Detailed Overview')" placeholder="What exactly do you want to achieve?" required />
+                        <flux:textarea wire:model="form.success_criteria" :label="__('Success Criteria')" placeholder="How will you know you've achieved this goal?" required />
+                        <flux:checkbox wire:model="form.is_public" :label="__('Make this goal visible to the team')" description="{{ __('Team leads can always see goals.') }}" />
                     </div>
                 @endif
 
@@ -123,7 +123,7 @@
                             </p>
                         </div>
 
-                        <flux:select wire:model="accountability_partner_id" :label="__('Select a Team Member')">
+                        <flux:select wire:model="form.accountability_partner_id" :label="__('Select a Team Member')">
                             <option value="">{{ __('No partner for now') }}</option>
                             @foreach($this->users as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -153,12 +153,12 @@
                         </div>
 
                         <div class="space-y-4">
-                            @foreach($milestones as $index => $m)
+                            @foreach($form->milestones as $index => $m)
                                 <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-zinc-700 dark:bg-zinc-900/50">
                                     <div class="flex items-start gap-4">
                                         <div class="flex-1 space-y-4">
-                                            <flux:input wire:model="milestones.{{ $index }}.title" placeholder="e.g. Complete the basics course" />
-                                            <flux:input type="date" wire:model="milestones.{{ $index }}.target_date" :label="__('Target completion')" />
+                                            <flux:input wire:model="form.milestones.{{ $index }}.title" placeholder="e.g. Complete the basics course" />
+                                            <flux:input type="date" wire:model="form.milestones.{{ $index }}.target_date" :label="__('Target completion')" />
                                         </div>
                                         <flux:button icon="x" variant="ghost" size="sm" type="button" wire:click="removeMilestone({{ $index }})" />
                                     </div>

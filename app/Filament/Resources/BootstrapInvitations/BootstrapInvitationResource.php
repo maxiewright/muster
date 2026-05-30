@@ -12,9 +12,9 @@ use App\Filament\Resources\BootstrapInvitations\Schemas\BootstrapInvitationInfol
 use App\Filament\Resources\BootstrapInvitations\Tables\BootstrapInvitationsTable;
 use App\Models\TeamInvitation;
 use BackedEnum;
+use CodeWithDennis\FilamentLucideIcons\Enums\LucideIcon;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -22,7 +22,7 @@ class BootstrapInvitationResource extends Resource
 {
     protected static ?string $model = TeamInvitation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedEnvelope;
+    protected static string|BackedEnum|null $navigationIcon = LucideIcon::MailPlus;
 
     public static function form(Schema $schema): Schema
     {

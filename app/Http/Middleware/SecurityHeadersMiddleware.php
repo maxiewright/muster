@@ -14,7 +14,8 @@ class SecurityHeadersMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $cspEnabled = (bool) config('security.csp_enabled', true);
+        $cspEnabled = (bool) config('security.csp_enabled', true)
+            && ! $request->is('admin', 'admin/*');
 
         if ($cspEnabled) {
             Vite::useCspNonce();

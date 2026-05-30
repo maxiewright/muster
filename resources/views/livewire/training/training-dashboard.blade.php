@@ -168,7 +168,7 @@
                                 $pendingVerifications = $goal->milestones->where('status', \App\Enums\MilestoneStatus::Completed)->count();
                             @endphp
                             @if($pendingVerifications > 0)
-                                <flux:button size="sm" variant="secondary" color="amber" href="{{ route('training.goals.show', $goal->slug) }}#milestones">
+                                <flux:button size="sm" variant="outline" color="amber" href="{{ route('training.goals.show', $goal->slug) }}#milestones">
                                     {{ $pendingVerifications }} {{ __('to verify') }}
                                 </flux:button>
                             @endif

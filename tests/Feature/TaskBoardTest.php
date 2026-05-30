@@ -166,7 +166,7 @@ test('task creation stamps the active unit context', function (): void {
     $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
     $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
     $user = User::factory()->create();
-    attachTaskBoardUserToUnit($user, $organization, $unit, 'owner');
+    attachTaskBoardUserToUnit($user, $organization, $unit, 'commander');
 
     $this->actingAs($user)->withSession(['active_unit_id' => $unit->id]);
 

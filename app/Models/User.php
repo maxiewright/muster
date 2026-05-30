@@ -143,7 +143,7 @@ class User extends Authenticatable implements FilamentUser, HasMedia
             return false;
         }
 
-        return in_array($membership->role, [UnitMembershipRole::Owner, UnitMembershipRole::Admin], true);
+        return in_array($membership->role, [UnitMembershipRole::Commander, UnitMembershipRole::Lead], true);
     }
 
     public function canInviteMembers(?Unit $unit = null): bool

@@ -6,16 +6,16 @@ namespace App\Enums;
 
 enum UnitMembershipRole: string
 {
-    case Owner = 'owner';
-    case Admin = 'admin';
+    case Commander = 'commander';
+    case Lead = 'lead';
     case Advisor = 'advisor';
     case Member = 'member';
 
     public function label(): string
     {
         return match ($this) {
-            self::Owner => 'Owner',
-            self::Admin => 'Admin',
+            self::Commander => 'Commander',
+            self::Lead => 'Lead',
             self::Advisor => 'Advisor',
             self::Member => 'Member',
         };

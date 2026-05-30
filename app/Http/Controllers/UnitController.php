@@ -46,7 +46,7 @@ class UnitController extends Controller
                 'unit_id' => $unit->id,
             ],
             [
-                'role' => 'owner',
+                'role' => 'commander',
             ],
         );
 

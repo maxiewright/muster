@@ -142,7 +142,7 @@ it('uses the correct timezone for today', function (): void {
 it('creates events inside the active unit context', function (): void {
     $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
     $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
-    attachCalendarLivewireUserToUnit($this->user, $organization, $unit, 'owner');
+    attachCalendarLivewireUserToUnit($this->user, $organization, $unit, 'commander');
 
     $this->withSession(['active_unit_id' => $unit->id]);
 

@@ -81,7 +81,7 @@ class SocialiteController extends Controller
                         'unit_id' => $defaultUnit->id,
                     ],
                     [
-                        'role' => $invitation->role === Role::Lead->value ? 'owner' : 'member',
+                        'role' => $invitation->role === Role::Lead->value ? 'commander' : 'member',
                     ],
                 );
             }

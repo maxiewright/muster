@@ -34,7 +34,7 @@ test('organization leads can create missions with a permanent roster', function 
     $lead = User::factory()->lead()->create(['organization_id' => $organization->id]);
     $operator = User::factory()->create(['organization_id' => $organization->id]);
 
-    attachMissionManagementUserToUnit($lead, $organization, $unit, 'owner');
+    attachMissionManagementUserToUnit($lead, $organization, $unit, 'commander');
     attachMissionManagementUserToUnit($operator, $organization, $unit);
 
     $this->actingAs($lead)
@@ -67,8 +67,8 @@ test('missions page only lists missions from the active unit', function (): void
     $bravoUnit = Unit::factory()->for($organization)->create(['name' => 'Bravo Unit']);
     $lead = User::factory()->lead()->create(['organization_id' => $organization->id]);
 
-    attachMissionManagementUserToUnit($lead, $organization, $alphaUnit, 'owner');
-    attachMissionManagementUserToUnit($lead, $organization, $bravoUnit, 'owner');
+    attachMissionManagementUserToUnit($lead, $organization, $alphaUnit, 'commander');
+    attachMissionManagementUserToUnit($lead, $organization, $bravoUnit, 'commander');
 
     Mission::query()->create([
         'organization_id' => $organization->id,
@@ -101,7 +101,7 @@ test('unit members can view missions without mission creation controls', functio
     $commander = User::factory()->lead()->create(['organization_id' => $organization->id]);
 
     attachMissionManagementUserToUnit($member, $organization, $unit);
-    attachMissionManagementUserToUnit($commander, $organization, $unit, 'owner');
+    attachMissionManagementUserToUnit($commander, $organization, $unit, 'commander');
 
     Mission::query()->create([
         'organization_id' => $organization->id,
@@ -126,7 +126,7 @@ test('creating an action with multiple assignees adds non-roster members as temp
     $actionLead = User::factory()->create(['organization_id' => $organization->id]);
     $temporaryAssignee = User::factory()->create(['organization_id' => $organization->id]);
 
-    attachMissionManagementUserToUnit($lead, $organization, $unit, 'owner');
+    attachMissionManagementUserToUnit($lead, $organization, $unit, 'commander');
     attachMissionManagementUserToUnit($actionLead, $organization, $unit);
     attachMissionManagementUserToUnit($temporaryAssignee, $organization, $unit);
 

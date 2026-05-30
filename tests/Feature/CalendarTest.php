@@ -159,8 +159,8 @@ test('calendar shows actions events and planned training for the active unit', f
     $otherUnit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Bravo', 'slug' => 'bravo']);
     $user = User::factory()->lead()->create(['organization_id' => $organization->id]);
     $eventType = EventType::factory()->create();
-    attachCalendarUserToUnit($user, $organization, $unit, 'owner');
-    attachCalendarUserToUnit($user, $organization, $otherUnit, 'owner');
+    attachCalendarUserToUnit($user, $organization, $unit, 'commander');
+    attachCalendarUserToUnit($user, $organization, $otherUnit, 'commander');
 
     Event::factory()->create([
         'user_id' => $user->id,

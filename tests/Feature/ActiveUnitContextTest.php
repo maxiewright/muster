@@ -36,7 +36,7 @@ test('authenticated users get an active unit stored in session from their first 
     UnitMembership::query()->create([
         'user_id' => $user->id,
         'unit_id' => $firstUnit->id,
-        'role' => 'owner',
+        'role' => 'commander',
     ]);
 
     $this->actingAs($user)

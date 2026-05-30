@@ -37,7 +37,7 @@ test('leads can assign unit-directed training goals to selected members', functi
     $secondMember = User::factory()->create(['organization_id' => $organization->id]);
     $partner = User::factory()->create(['organization_id' => $organization->id]);
 
-    attachTrainingCommanderUserToUnit($lead, $organization, $unit, 'owner');
+    attachTrainingCommanderUserToUnit($lead, $organization, $unit, 'commander');
     attachTrainingCommanderUserToUnit($firstMember, $organization, $unit);
     attachTrainingCommanderUserToUnit($secondMember, $organization, $unit);
     attachTrainingCommanderUserToUnit($partner, $organization, $unit);
@@ -78,7 +78,7 @@ test('select all with exclusions only assigns training to the remaining unit mem
     $secondMember = User::factory()->create(['organization_id' => $organization->id]);
     $excludedMember = User::factory()->create(['organization_id' => $organization->id]);
 
-    attachTrainingCommanderUserToUnit($lead, $organization, $unit, 'owner');
+    attachTrainingCommanderUserToUnit($lead, $organization, $unit, 'commander');
     attachTrainingCommanderUserToUnit($firstMember, $organization, $unit);
     attachTrainingCommanderUserToUnit($secondMember, $organization, $unit);
     attachTrainingCommanderUserToUnit($excludedMember, $organization, $unit);

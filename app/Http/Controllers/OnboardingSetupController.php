@@ -65,7 +65,7 @@ class OnboardingSetupController extends Controller
             UnitMembership::query()->create([
                 'user_id' => $user->id,
                 'unit_id' => $unit->id,
-                'role' => 'owner',
+                'role' => 'commander',
             ]);
 
             $user->forceFill(['email_verified_at' => now()])->save();

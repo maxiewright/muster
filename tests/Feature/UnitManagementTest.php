@@ -10,7 +10,7 @@ use App\Models\User;
 
 use function Pest\Laravel\actingAs;
 
-function attachUnitManagementUserToUnit(User $user, Organization $organization, Unit $unit, string $role = 'owner'): void
+function attachUnitManagementUserToUnit(User $user, Organization $organization, Unit $unit, string $role = 'commander'): void
 {
     $user->forceFill(['organization_id' => $organization->id])->save();
 
@@ -48,7 +48,7 @@ test('organization leads can create units in their organization', function (): v
     expect(UnitMembership::query()
         ->where('user_id', $lead->id)
         ->where('unit_id', $newUnit?->id)
-        ->where('role', 'owner')
+        ->where('role', 'commander')
         ->exists())->toBeTrue();
 
     expect(session('active_unit_id'))->toBe($newUnit?->id);

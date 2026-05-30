@@ -43,7 +43,7 @@ test('dashboard layout exposes the operational navigation in the requested order
     $organization = Organization::query()->create(['name' => 'Ops', 'slug' => 'ops']);
     $unit = Unit::query()->create(['organization_id' => $organization->id, 'name' => 'Alpha', 'slug' => 'alpha']);
     $user = User::factory()->lead()->create(['organization_id' => $organization->id]);
-    attachUserToUnit($user, $organization, $unit, 'owner');
+    attachUserToUnit($user, $organization, $unit, 'commander');
 
     $response = $this->actingAs($user)
         ->withSession(['active_unit_id' => $unit->id])

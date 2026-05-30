@@ -13,6 +13,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -32,9 +33,19 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             ->brandName('Muster Admin')
+            ->brandLogo(fn () => view('filament.admin.brand-logo'))
+            ->darkModeBrandLogo(fn () => view('filament.admin.brand-logo'))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(asset('favicon.svg'))
+            ->font('Instrument Sans')
             ->colors([
                 'primary' => Color::Amber,
+                'gray' => Color::Zinc,
             ])
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE,
+                fn () => view('filament.admin.login-hero'),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->pages([
                 Dashboard::class,

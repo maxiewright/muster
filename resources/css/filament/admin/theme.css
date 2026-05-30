@@ -2,3 +2,53 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+
+/* Match the public app: same font stack, same subtle grid + radial gradients
+   on the auth/login surface. Filament's panel chrome stays clean. */
+@layer base {
+    .fi-body,
+    .fi-simple-layout {
+        font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    /* Filament's simple layout wraps the login form. Give it the same
+       mission-control radial gradient + grid the public auth split uses. */
+    .fi-simple-layout {
+        background-image:
+            radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.10), transparent 30%),
+            radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.08), transparent 33%),
+            linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+        background-attachment: fixed;
+    }
+
+    .dark .fi-simple-layout {
+        background-image:
+            radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.22), transparent 30%),
+            radial-gradient(circle at 80% 0%, rgba(245, 158, 11, 0.18), transparent 33%),
+            linear-gradient(180deg, #09090b 0%, #18181b 50%, #09090b 100%);
+    }
+
+    .fi-simple-layout::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background-image:
+            linear-gradient(rgba(148, 163, 184, 0.10) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(148, 163, 184, 0.10) 1px, transparent 1px);
+        background-size: 44px 44px;
+    }
+
+    .dark .fi-simple-layout::before {
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    }
+
+    /* Lift the login card above the grid overlay. */
+    .fi-simple-main {
+        position: relative;
+        z-index: 1;
+    }
+}

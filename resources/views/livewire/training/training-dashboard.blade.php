@@ -16,19 +16,23 @@
         <flux:separator variant="subtle" />
     </div>
 
-    {{-- Stats Row --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <flux:card class="flex flex-col items-center justify-center py-6">
-            <flux:heading size="lg" class="mb-1">{{ $this->stats['completed'] }}</flux:heading>
-            <flux:subheading>{{ __('Goals Completed') }}</flux:subheading>
+    {{-- Stats: 3-col on every breakpoint so mobile packs them horizontally too. Tighter padding
+         + smaller labels on mobile keep them compact without losing prominence. --}}
+    <div class="mb-6 grid grid-cols-3 gap-2 sm:gap-3 sm:mb-8">
+        <flux:card class="flex flex-col items-center justify-center !p-3 text-center sm:!p-6">
+            <p class="text-[9px] sm:text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500">{{ __('Completed') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{{ $this->stats['completed'] }}</p>
+            <p class="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400">{{ __('goals') }}</p>
         </flux:card>
-        <flux:card class="flex flex-col items-center justify-center py-6">
-            <flux:heading size="lg" class="mb-1">{{ $this->stats['partner_count'] }}</flux:heading>
-            <flux:subheading>{{ __('As Partner') }}</flux:subheading>
+        <flux:card class="flex flex-col items-center justify-center !p-3 text-center sm:!p-6">
+            <p class="text-[9px] sm:text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500">{{ __('Partnering') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400 tabular-nums">{{ $this->stats['partner_count'] }}</p>
+            <p class="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400">{{ __('soldiers') }}</p>
         </flux:card>
-        <flux:card class="flex flex-col items-center justify-center py-6">
-            <flux:heading size="lg" class="mb-1">{{ $this->stats['hours'] }}h</flux:heading>
-            <flux:subheading>{{ __('Hours Logged') }}</flux:subheading>
+        <flux:card class="flex flex-col items-center justify-center !p-3 text-center sm:!p-6">
+            <p class="text-[9px] sm:text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500">{{ __('Logged') }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-sky-600 dark:text-sky-400 tabular-nums">{{ $this->stats['hours'] }}<span class="text-sm font-semibold">h</span></p>
+            <p class="text-[9px] sm:text-[10px] text-zinc-500 dark:text-zinc-400">{{ __('this month') }}</p>
         </flux:card>
     </div>
 

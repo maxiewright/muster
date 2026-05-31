@@ -1,6 +1,54 @@
 {
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff": {
+    "file": "assets/instrument-sans-latin-400-normal-D1W7dsQl.woff",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2": {
+    "file": "assets/instrument-sans-latin-400-normal-DRC__1Mx.woff2",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-400-normal.woff2"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff": {
+    "file": "assets/instrument-sans-latin-500-normal-Z6ESRlEs.woff",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff2": {
+    "file": "assets/instrument-sans-latin-500-normal-Dk9ku72i.woff2",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-500-normal.woff2"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-600-normal.woff": {
+    "file": "assets/instrument-sans-latin-600-normal-B9e8oLYv.woff",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-600-normal.woff"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-600-normal.woff2": {
+    "file": "assets/instrument-sans-latin-600-normal-B7fBEWYG.woff2",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-600-normal.woff2"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-400-normal.woff": {
+    "file": "assets/instrument-sans-latin-ext-400-normal-r32jotim.woff",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-400-normal.woff"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-400-normal.woff2": {
+    "file": "assets/instrument-sans-latin-ext-400-normal-Q_nF8v4l.woff2",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-400-normal.woff2"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-500-normal.woff": {
+    "file": "assets/instrument-sans-latin-ext-500-normal-CAxz3nsc.woff",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-500-normal.woff"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-500-normal.woff2": {
+    "file": "assets/instrument-sans-latin-ext-500-normal-CTEe1bJa.woff2",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-500-normal.woff2"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-600-normal.woff": {
+    "file": "assets/instrument-sans-latin-ext-600-normal-DMks36a2.woff",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-600-normal.woff"
+  },
+  "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-600-normal.woff2": {
+    "file": "assets/instrument-sans-latin-ext-600-normal-BsaQcF38.woff2",
+    "src": "node_modules/@fontsource/instrument-sans/files/instrument-sans-latin-ext-600-normal.woff2"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-nXV4jZI0.css",
+    "file": "assets/app-Dlgt6nfC.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",

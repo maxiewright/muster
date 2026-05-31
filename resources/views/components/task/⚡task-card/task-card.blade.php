@@ -10,24 +10,20 @@
         . ($task->isOverdue() ? 'border-l-[3px] border-l-red-500 ' : '')
         . ($task->isDueToday() && !$task->isOverdue() ? 'border-l-[3px] border-l-amber-500 ' : '')
         . ($task->isDueSoon() && !$task->isDueToday() && !$task->isOverdue() ? 'border-l-[3px] border-l-blue-500 ' : '')
-        . ($compact ? '!p-2' : '!p-3');
-    $cardAttrs = $draggable && $this->canEdit && !$sortHandle
-        ? ' draggable="true" x-data x-on:dragstart="$event.dataTransfer.setData(\'taskId\', '.$task->id.')"'
-        : '';
+        . ($compact ? '!p-1.5 sm:!p-2' : '!p-3');
 @endphp
-<div {!! $cardAttrs !!} class="{{ $cardClass }}">
+<div class="{{ $cardClass }}">
     {{-- Priority bar (Trello-like) --}}
     <div class="h-0.5 {{ $priorityBarColor }} w-full flex-shrink-0"></div>
-    <div class="{{ $compact ? 'p-2' : 'p-3' }} min-w-0">
+    <div class="{{ $compact ? 'p-1.5 sm:p-2' : 'p-3' }} min-w-0">
     {{-- Priority & Title Row --}}
-    <div class="flex items-start gap-2 {{ $compact ? 'mb-1' : 'mb-2' }}">
+    <div class="flex items-start gap-1.5 sm:gap-2 {{ $compact ? 'mb-1' : 'mb-2' }}">
         {{-- One-click complete checkbox (always visible when editable) --}}
         @if($showActions && $this->canEdit)
             <button type="button"
-                    wire:sort:ignore
                     wire:click.stop="toggleComplete"
                     wire:loading.attr="disabled"
-                    class="flex-shrink-0 mt-0.5 p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:ring-offset-1 min-h-[44px] min-w-[44px]"
+                    class="flex-shrink-0 mt-0.5 p-1.5 sm:p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-500 focus:ring-offset-1 min-h-[36px] sm:min-h-[44px] min-w-[36px] sm:min-w-[44px]"
                     title="{{ $task->status === \App\Enums\TaskStatus::Completed ? 'Mark not complete' : 'Mark complete' }}"
                     aria-label="{{ $task->status === \App\Enums\TaskStatus::Completed ? 'Mark not complete' : 'Mark complete' }}">
                 @if($task->status === \App\Enums\TaskStatus::Completed)
@@ -59,24 +55,24 @@
 
         {{-- Title (click to open detail) --}}
         <button type="button"
-                wire:sort:ignore
                 wire:click.stop="$dispatch('open-task-detail', { taskId: {{ $task->id }} })"
-                class="flex-1 min-w-0 text-left cursor-pointer hover:underline focus:outline-none focus:ring-0">
-            <flux:heading level="4" class="{{ $compact ? '!text-xs' : '!text-sm' }} font-medium line-clamp-2">
+                class="flex-1 min-w-0 pt-1 text-left cursor-pointer hover:underline focus:outline-none focus:ring-0">
+            <flux:heading level="4" class="{{ $compact ? '!text-xs sm:!text-sm' : '!text-sm' }} font-medium line-clamp-2">
                 {{ $task->title }}
             </flux:heading>
         </button>
 
-        {{-- One-click Start (Todo/Backlog only) --}}
+        {{-- One-click Start (Todo/Backlog only) — hidden on mobile to reduce density; the
+             status dropdown does the same job. --}}
         @if($showActions && $this->canEdit && in_array($task->status->value, ['backlog', 'todo'], true))
-            <flux:button variant="ghost" size="xs" icon="play" wire:sort:ignore wire:click.stop="startTask" wire:loading.attr="disabled" class="flex-shrink-0 !min-w-0 min-h-[36px] sm:min-h-0" title="Start task">
+            <flux:button variant="ghost" size="xs" icon="play" wire:click.stop="startTask" wire:loading.attr="disabled" class="hidden sm:inline-flex flex-shrink-0 !min-w-0 min-h-[36px] sm:min-h-0" title="Start task">
                 Start
             </flux:button>
         @endif
 
         {{-- Quick Status Menu (on hover) --}}
         @if($showActions && $this->canEdit)
-            <div class="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" wire:sort:ignore @click.stop>
+            <div class="flex-shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" @click.stop>
                 <flux:dropdown>
                     <flux:button variant="ghost" size="xs" icon="ellipsis" class="min-h-[44px] min-w-[44px]" />
 
@@ -114,7 +110,7 @@
     @endif
 
     {{-- Tags Row --}}
-    <div class="flex flex-wrap items-center gap-1.5 {{ $compact ? 'mb-1.5 ml-6' : 'mb-3 ml-6' }}">
+    <div class="flex flex-wrap items-center gap-1.5 {{ $compact ? 'mb-1 ml-1.5 sm:ml-6' : 'mb-3 ml-6' }}">
         {{-- Status Badge --}}
         @php
             $statusColor = match($task->status->value) {
@@ -139,7 +135,7 @@
     </div>
 
     {{-- Footer --}}
-    <div class="flex items-center justify-between gap-2 {{ $compact ? 'mt-1.5 ml-6' : 'mt-2 ml-6' }}">
+    <div class="flex items-center justify-between gap-2 {{ $compact ? 'mt-1 ml-1.5 sm:ml-6' : 'mt-2 ml-6' }}">
         {{-- Subtask count (Trello-like) --}}
         @if(($task->subtasks_count ?? 0) > 0)
             <span class="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400" title="Subtasks">
@@ -190,7 +186,7 @@
         $musterCount = $task->musters_count ?? 0;
     @endphp
     @if($musterCount > 0)
-        <div class="{{ $compact ? 'mt-1.5 ml-6' : 'mt-2 ml-6' }}">
+        <div class="{{ $compact ? 'mt-1 ml-1.5 sm:ml-6' : 'mt-2 ml-6' }}">
             <flux:badge size="sm" color="indigo" icon="messages-square" variant="pill">
                 {{ $musterCount }} muster(s)
             </flux:badge>

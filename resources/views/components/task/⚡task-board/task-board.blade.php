@@ -66,12 +66,10 @@
                             </flux:menu>
                         </flux:dropdown>
                     </div>
-                    <div class="custom-scrollbar flex-1 space-y-2 overflow-y-auto p-2 lg:min-h-0"
-                         wire:sort.ghost="sortTaskTo{{ \Illuminate\Support\Str::studly($status->value) }}"
-                         wire:sort:group="tasks">
+                    <div class="custom-scrollbar flex-1 space-y-1.5 overflow-y-auto p-1.5 sm:space-y-2 sm:p-2 lg:min-h-0">
                         @foreach($columnTasks as $task)
-                            <div wire:sort:item="{{ $task->id }}" wire:key="task-{{ $task->id }}">
-                                <livewire:task.task-card :task="$task" :key="'task-'.$task->id.'-'.$task->status->value" :compact="true" :sort-handle="true" wire:sort:handle />
+                            <div wire:key="task-{{ $task->id }}">
+                                <livewire:task.task-card :task="$task" :key="'task-'.$task->id.'-'.$task->status->value" :compact="true" />
                             </div>
                         @endforeach
                         @if($columnTasks->isEmpty())

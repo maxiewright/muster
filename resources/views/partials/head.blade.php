@@ -23,8 +23,8 @@
 <link rel="manifest" href="{{ asset('site.webmanifest').'?v='.$manifestVersion }}">
 <meta property="og:image" content="{{ asset('og-image.png').'?v='.$openGraphImageVersion }}">
 
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+{{-- Instrument Sans is self-hosted via @fontsource (bundled into app.css), so no preconnect /
+     blocking stylesheet from fonts.bunny.net is needed. --}}
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @fluxAppearance(['nonce' => \Illuminate\Support\Facades\Vite::cspNonce()])
